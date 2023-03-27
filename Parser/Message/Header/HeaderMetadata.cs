@@ -4,7 +4,7 @@ namespace Parser.Message.Header
 {
 class HeaderMetadata
 {
-    public static readonly int SIZE = Utility.GUID_SIZE + sizeof(Message.Type) + sizeof(uint);
+    public static readonly uint SIZE = Utility.GUID_SIZE + sizeof(Message.Type) + sizeof(uint);
 
     public Guid GUID { get; } = Guid.Empty;
     public Message.Type Type { get; } = Message.Type.NONE;
@@ -24,9 +24,9 @@ class HeaderMetadata
         string headerAsString = "";
 
         headerAsString += GUID.ToString();
-        headerAsString += Utility.HEADER_STRING_DELIMITATOR;
+        headerAsString += "|";
         headerAsString += Type.ToString();
-        headerAsString += Utility.HEADER_STRING_DELIMITATOR;
+        headerAsString += "|";
         headerAsString += Size.ToString();
 
         return headerAsString;

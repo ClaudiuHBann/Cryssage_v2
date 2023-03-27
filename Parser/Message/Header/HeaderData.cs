@@ -2,7 +2,7 @@
 {
 class HeaderData
 {
-    public static readonly int SIZE = Utility.GUID_SIZE + sizeof(uint);
+    public static readonly uint SIZE = Utility.GUID_SIZE + sizeof(uint);
 
     public Guid GUID { get; } = Guid.Empty;
     public uint Index { get; } = 0;
@@ -18,7 +18,7 @@ class HeaderData
         string headerAsString = "";
 
         headerAsString += GUID.ToString();
-        headerAsString += Utility.HEADER_STRING_DELIMITATOR;
+        headerAsString += "|";
         headerAsString += Index.ToString();
 
         return headerAsString;

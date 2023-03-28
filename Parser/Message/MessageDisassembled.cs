@@ -1,6 +1,6 @@
 ﻿namespace Parser.Message
 {
-class MessageDisassembled
+public class MessageDisassembled
 {
     public Guid GUID { get; set; }
     public Message.Type Type { get; set; }

@@ -2,7 +2,7 @@
 
 namespace Parser
 {
-class Utility
+public class Utility
 {
     public static readonly uint GUID_SIZE = 16;
 

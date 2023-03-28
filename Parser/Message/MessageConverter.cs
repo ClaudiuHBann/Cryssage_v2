@@ -6,7 +6,7 @@ using Parser.Message.Packet;
 
 namespace Parser.Message
 {
-class MessageConverter
+public class MessageConverter
 {
     public static byte[] MessageToBytes(Message message)
     {

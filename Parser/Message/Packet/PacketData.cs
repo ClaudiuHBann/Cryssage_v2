@@ -4,7 +4,7 @@ using Parser.Message.Header;
 
 namespace Parser.Message.Packet
 {
-class PacketData
+public class PacketData
 {
     public static readonly uint SIZE_MAX = Utility.PACKET_DATA_SIZE_MAX;
     public static readonly uint CONTENT_SIZE_MAX = Utility.PACKET_DATA_CONTENT_SIZE_MAX;
@@ -20,6 +20,16 @@ class PacketData
 
         Header = header;
         Content = content;
+    }
+
+    public static bool operator ==(PacketData left, PacketData right)
+    {
+        return left.Header == right.Header && left.Content.SequenceEqual(right.Content);
+    }
+
+    public static bool operator !=(PacketData left, PacketData right)
+    {
+        return !(left == right);
     }
 }
 }

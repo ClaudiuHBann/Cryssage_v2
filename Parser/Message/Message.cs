@@ -2,7 +2,7 @@
 
 namespace Parser.Message
 {
-class Message
+public class Message
 {
     public enum Type : byte
     {

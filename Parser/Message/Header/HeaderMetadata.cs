@@ -2,7 +2,7 @@
 
 namespace Parser.Message.Header
 {
-class HeaderMetadata
+public class HeaderMetadata
 {
     public static readonly uint SIZE = Utility.GUID_SIZE + sizeof(Message.Type) + sizeof(uint);
 
@@ -30,6 +30,16 @@ class HeaderMetadata
         headerAsString += Size.ToString();
 
         return headerAsString;
+    }
+
+    public static bool operator ==(HeaderMetadata left, HeaderMetadata right)
+    {
+        return left.GUID == right.GUID && left.Type == right.Type && left.Size == right.Size;
+    }
+
+    public static bool operator !=(HeaderMetadata left, HeaderMetadata right)
+    {
+        return !(left == right);
     }
 }
 }

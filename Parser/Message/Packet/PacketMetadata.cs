@@ -2,13 +2,23 @@
 
 namespace Parser.Message.Packet
 {
-class PacketMetadata
+public class PacketMetadata
 {
     public HeaderMetadata Header { get; }
 
     public PacketMetadata(HeaderMetadata header)
     {
         Header = header;
+    }
+
+    public static bool operator ==(PacketMetadata left, PacketMetadata right)
+    {
+        return left.Header == right.Header;
+    }
+
+    public static bool operator !=(PacketMetadata left, PacketMetadata right)
+    {
+        return !(left == right);
     }
 }
 }

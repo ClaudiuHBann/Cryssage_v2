@@ -1,6 +1,6 @@
 ﻿namespace Parser.Message.Header
 {
-class HeaderData
+public class HeaderData
 {
     public static readonly uint SIZE = Utility.GUID_SIZE + sizeof(uint);
 
@@ -22,6 +22,16 @@ class HeaderData
         headerAsString += Index.ToString();
 
         return headerAsString;
+    }
+
+    public static bool operator ==(HeaderData left, HeaderData right)
+    {
+        return left.GUID == right.GUID && left.Index == right.Index;
+    }
+
+    public static bool operator !=(HeaderData left, HeaderData right)
+    {
+        return !(left == right);
     }
 }
 }

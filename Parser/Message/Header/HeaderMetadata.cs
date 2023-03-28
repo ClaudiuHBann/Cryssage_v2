@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Parser.Message.Packet;
+using System.Diagnostics;
 
 namespace Parser.Message.Header
 {
@@ -40,6 +41,26 @@ public class HeaderMetadata
     public static bool operator !=(HeaderMetadata left, HeaderMetadata right)
     {
         return !(left == right);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+
+        if (obj is null)
+        {
+            return false;
+        }
+
+        return this == (HeaderMetadata)obj;
+    }
+
+    public override int GetHashCode()
+    {
+        throw new NotImplementedException();
     }
 }
 }

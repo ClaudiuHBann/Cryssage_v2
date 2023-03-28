@@ -1,4 +1,6 @@
-﻿namespace Parser.Message.Header
+﻿using Parser.Message.Packet;
+
+namespace Parser.Message.Header
 {
 public class HeaderData
 {
@@ -32,6 +34,26 @@ public class HeaderData
     public static bool operator !=(HeaderData left, HeaderData right)
     {
         return !(left == right);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+
+        if (obj is null)
+        {
+            return false;
+        }
+
+        return this == (HeaderData)obj;
+    }
+
+    public override int GetHashCode()
+    {
+        throw new NotImplementedException();
     }
 }
 }

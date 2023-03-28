@@ -2,7 +2,7 @@
 {
 class ManagerTests
 {
-    Queue<ITests> Tests = new();
+    readonly Queue<ITests> Tests = new();
 
     public ManagerTests()
     {

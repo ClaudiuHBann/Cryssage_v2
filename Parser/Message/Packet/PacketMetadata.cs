@@ -20,5 +20,25 @@ public class PacketMetadata
     {
         return !(left == right);
     }
+
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+
+        if (obj is null)
+        {
+            return false;
+        }
+
+        return this == (PacketMetadata)obj;
+    }
+
+    public override int GetHashCode()
+    {
+        throw new NotImplementedException();
+    }
 }
 }

@@ -1,10 +1,16 @@
-﻿namespace Test
+﻿using Test.ParserTests;
+
+namespace Test
 {
-    internal class Program
+class Program
+{
+    static void Main()
     {
-        static void Main(string[] args)
-        {
-            Console.WriteLine("Hello, World!");
-        }
+        ManagerTests managerTests = new();
+
+        managerTests.AddTest(new MessageTests());
+
+        managerTests.Run();
     }
+}
 }

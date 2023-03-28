@@ -4,7 +4,7 @@ using Parser.Message.Packet;
 
 namespace Parser
 {
-class MessageManager
+public class MessageManager
 {
 
     public static Message.Message ToMessage(byte[] bytes, Message.Message.Type type, Guid guid)
@@ -43,7 +43,9 @@ class MessageManager
 
     public static MessageDisassembled FromMessage(Message.Message message)
     {
-        byte[] bytes = new byte[message.PacketMetadata.Header.Size];
+        uint bytesSize = 0;
+        message.PacketDatas.ForEach(packetData => bytesSize += (uint)packetData.Content.Length);
+        byte[] bytes = new byte[bytesSize];
 
         foreach (var packetData in message.PacketDatas)
         {

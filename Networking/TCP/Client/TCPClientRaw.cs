@@ -1,21 +1,19 @@
-﻿using System.IO;
-
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 
 namespace Networking.TCP.Client
 {
-using TCPClientRawCallbackConnect = Action<SocketError, bool>;
-using TCPClientRawCallbackSend = Action<SocketError, uint>;
-using TCPClientRawCallbackReceive = Action<SocketError, byte[]?>;
-using TCPClientRawCallbackDisconnect = Action<SocketError>;
+using CallbackConnect = Action<SocketError, bool>;
+using CallbackSend = Action<SocketError, uint>;
+using CallbackReceive = Action<SocketError, byte[]?>;
+using CallbackDisconnect = Action<SocketError>;
 
 class TCPClientRaw
 {
-    readonly Socket Client = new(SocketType.Stream, ProtocolType.Tcp);
-    bool Connected = false;
+    protected readonly Socket Client = new(SocketType.Stream, ProtocolType.Tcp);
+    protected bool Connected = false;
 
-    public void Connect(string ip, ushort port, TCPClientRawCallbackConnect? callback = null)
+    public void Connect(string ip, ushort port, CallbackConnect? callback = null)
     {
         SocketAsyncEventArgs args = new() { RemoteEndPoint = new IPEndPoint(IPAddress.Parse(ip), port) };
         if (callback != null)
@@ -30,7 +28,7 @@ class TCPClientRaw
         Client.ConnectAsync(args);
     }
 
-    public void SendAll(byte[] stream, TCPClientRawCallbackSend? callback = null)
+    protected void SendAll(byte[] stream, CallbackSend? callback = null)
     {
         if (!Connected)
         {
@@ -40,16 +38,13 @@ class TCPClientRaw
 
         SocketAsyncEventArgs args = new();
         args.SetBuffer(stream, 0, stream.Length);
-        if (callback != null)
-        {
-            args.Completed += (sender, args) => callback(args.SocketError, (uint)(args.Offset + args.BytesTransferred));
-            args.UserToken = callback;
-        }
+        args.UserToken = callback;
+        args.Completed += OnSendReceiveShard;
 
         Client.SendAsync(args);
     }
 
-    public void ReceiveAll(byte[] stream, TCPClientRawCallbackReceive? callback = null)
+    protected void ReceiveAll(byte[] stream, CallbackReceive? callback = null)
     {
         if (!Connected)
         {
@@ -59,16 +54,13 @@ class TCPClientRaw
 
         SocketAsyncEventArgs args = new();
         args.SetBuffer(stream, 0, stream.Length);
-        if (callback != null)
-        {
-            args.Completed += (sender, args) => callback(args.SocketError, args.Buffer);
-            args.UserToken = callback;
-        }
+        args.UserToken = callback;
+        args.Completed += OnSendReceiveShard;
 
         Client.ReceiveAsync(args);
     }
 
-    public void Disconnect(TCPClientRawCallbackDisconnect? callback = null)
+    public void Disconnect(CallbackDisconnect? callback = null)
     {
         if (!Connected)
         {
@@ -92,12 +84,12 @@ class TCPClientRaw
         {
             if (args.LastOperation == SocketAsyncOperation.Send)
             {
-                ((TCPClientRawCallbackSend?)args.UserToken)?.Invoke(args.SocketError, bytesTransferredTotal);
+                ((CallbackSend?)args.UserToken)?.Invoke(args.SocketError, bytesTransferredTotal);
             }
             else
             {
                 args.SetBuffer(args.Buffer, 0, (int)bytesTransferredTotal);
-                ((TCPClientRawCallbackReceive?)args.UserToken)?.Invoke(args.SocketError, args.Buffer);
+                ((CallbackReceive?)args.UserToken)?.Invoke(args.SocketError, args.Buffer);
             }
         }
 

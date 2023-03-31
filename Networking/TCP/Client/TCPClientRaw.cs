@@ -1,54 +1,102 @@
-﻿using System.Net;
+﻿using System.IO;
+
+using System.Net;
 using System.Net.Sockets;
 
 namespace Networking.TCP.Client
 {
-using TCPClientRawCallbackConnect = Action<bool>;
-using TCPClientRawCallbackSend = Action<uint, int>;
-using TCPClientRawCallbackReceive = Action<uint, byte[]>;
-using TCPClientRawCallbackDisconnect = Action<bool>;
-
 public class TCPClientRaw
 {
-    Socket Client;
+    protected Socket Client = new(SocketType.Stream, ProtocolType.Tcp);
 
-    public uint BufferReceiveSize { get; set; } = 8192;
+    protected Action<SocketError, bool>? CallbackConnect = null;
+    protected Action<SocketError, uint>? CallbackSend = null;
+    protected Action<SocketError, byte[]?>? CallbackReceive = null;
+    protected Action<SocketError>? CallbackDisconnect = null;
 
-    public TCPClientRaw()
-    {
-        Client = new(SocketType.Stream, ProtocolType.Tcp);
-    }
-
-    public void Connect(string ip, ushort port, TCPClientRawCallbackConnect? callback = null)
+    public bool Connect(string ip, ushort port)
     {
         SocketAsyncEventArgs args = new() { RemoteEndPoint = new IPEndPoint(IPAddress.Parse(ip), port) };
-        args.Completed += (s, e) => callback?.Invoke(Client.Connected);
+        args.Completed += OnConnect;
 
-        Client.ConnectAsync(args);
+        return Client.ConnectAsync(args);
     }
 
-    public void Send(string ip, ushort port, TCPClientRawCallbackSend? callback = null)
+    public void SendAll(byte[] stream)
     {
-        SocketAsyncEventArgs args = new() { RemoteEndPoint = new IPEndPoint(IPAddress.Parse(ip), port) };
-        args.Completed += (s, e) => callback?.Invoke(Client.Connected);
+        if (Client == null)
+        {
+            CallbackSend?.Invoke(SocketError.NotConnected, 0);
+            return;
+        }
+
+        SocketAsyncEventArgs args = new();
+        args.SetBuffer(stream, 0, stream.Length);
+        args.Completed += OnSendReceiveShard;
 
         Client.SendAsync(args);
     }
 
-    public void Receive(string ip, ushort port, TCPClientRawCallbackReceive? callback = null)
+    public bool ReceiveAll(byte[] stream, uint offset, uint count)
     {
-        SocketAsyncEventArgs args = new() { RemoteEndPoint = new IPEndPoint(IPAddress.Parse(ip), port) };
-        args.Completed += (s, e) => callback?.Invoke(Client.Connected);
+        if (Client == null)
+        {
+            return false;
+        }
 
-        Client.ReceiveAsync(args);
+        SocketAsyncEventArgs args = new();
+        args.SetBuffer(stream, (int)offset, (int)count);
+        args.Completed += OnSendReceiveShard;
+
+        var succeeded = Client?.ReceiveAsync(args);
+        return succeeded != null && (bool)succeeded;
     }
 
-    public void Disconnect(TCPClientRawCallbackDisconnect? callback = null)
+    public bool Disconnect()
     {
-        SocketAsyncEventArgs args = new();
-        args.Completed += (s, e) => callback?.Invoke(e.SocketError == SocketError.Success);
+        if (Client == null)
+        {
+            CallbackDisconnect?.Invoke(SocketError.NotConnected);
+            return false;
+        }
 
-        Client.DisconnectAsync(args);
+        SocketAsyncEventArgs args = new();
+        args.Completed += OnDisconnect;
+
+        return Client.DisconnectAsync(args);
+    }
+
+    void OnConnect(object? sender, SocketAsyncEventArgs args)
+    {
+        CallbackConnect?.Invoke(args.SocketError, args.SocketError == SocketError.Success);
+    }
+
+    void OnSendReceiveShard(object? sender, SocketAsyncEventArgs args)
+    {
+        if (args.SocketError != SocketError.Success || args.Offset + args.BytesTransferred == args.Buffer?.Length)
+        {
+            CallbackSend?.Invoke(args.SocketError, (uint)(args.Offset + args.BytesTransferred));
+        }
+
+        var offsetNew = args.Offset + args.BytesTransferred;
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+        var countNew = args.Buffer.Length - offsetNew;
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+        args.SetBuffer(args.Buffer, offsetNew, countNew);
+
+        if (args.LastOperation == SocketAsyncOperation.Send)
+        {
+            Client?.SendAsync(args);
+        }
+        else
+        {
+            Client?.ReceiveAsync(args);
+        }
+    }
+
+    void OnDisconnect(object? sender, SocketAsyncEventArgs args)
+    {
+        CallbackDisconnect?.Invoke(args.SocketError);
     }
 }
 }

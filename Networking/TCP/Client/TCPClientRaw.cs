@@ -16,16 +16,17 @@ class TCPClientRaw
     public void Connect(string ip, ushort port, CallbackConnect? callback = null)
     {
         SocketAsyncEventArgs args = new() { RemoteEndPoint = new IPEndPoint(IPAddress.Parse(ip), port) };
-        if (callback != null)
+        args.Completed += (sender, args) =>
         {
-            args.Completed += (sender, args) =>
-            {
-                Connected = args.SocketError == SocketError.Success;
-                callback(args.SocketError, Connected);
-            };
-        }
+            Connected = args.SocketError == SocketError.Success;
+            callback?.Invoke(args.SocketError, Connected);
+        };
 
-        Client.ConnectAsync(args);
+        if (!Client.ConnectAsync(args))
+        {
+            Connected = args.SocketError == SocketError.Success;
+            callback?.Invoke(args.SocketError, Connected);
+        }
     }
 
     protected void SendAll(byte[] stream, CallbackSend? callback = null)
@@ -36,12 +37,14 @@ class TCPClientRaw
             return;
         }
 
-        SocketAsyncEventArgs args = new();
+        SocketAsyncEventArgs args = new() { UserToken = callback };
         args.SetBuffer(stream, 0, stream.Length);
-        args.UserToken = callback;
         args.Completed += OnSendReceiveShard;
 
-        Client.SendAsync(args);
+        if (!Client.SendAsync(args))
+        {
+            OnSendReceiveShard(this, args);
+        }
     }
 
     protected void ReceiveAll(byte[] stream, CallbackReceive? callback = null)
@@ -52,12 +55,14 @@ class TCPClientRaw
             return;
         }
 
-        SocketAsyncEventArgs args = new();
+        SocketAsyncEventArgs args = new() { UserToken = callback };
         args.SetBuffer(stream, 0, stream.Length);
-        args.UserToken = callback;
         args.Completed += OnSendReceiveShard;
 
-        Client.ReceiveAsync(args);
+        if (!Client.ReceiveAsync(args))
+        {
+            OnSendReceiveShard(this, args);
+        }
     }
 
     public void Disconnect(CallbackDisconnect? callback = null)
@@ -74,7 +79,10 @@ class TCPClientRaw
             args.Completed += (sender, args) => callback(args.SocketError);
         }
 
-        Client.DisconnectAsync(args);
+        if (!Client.DisconnectAsync(args))
+        {
+            callback?.Invoke(args.SocketError);
+        }
     }
 
     void OnSendReceiveShard(object? sender, SocketAsyncEventArgs args)
@@ -101,11 +109,17 @@ class TCPClientRaw
 
         if (args.LastOperation == SocketAsyncOperation.Send)
         {
-            Client.SendAsync(args);
+            if (!Client.SendAsync(args))
+            {
+                OnSendReceiveShard(this, args);
+            }
         }
         else
         {
-            Client.ReceiveAsync(args);
+            if (!Client.ReceiveAsync(args))
+            {
+                OnSendReceiveShard(this, args);
+            }
         }
     }
 }

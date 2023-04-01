@@ -73,8 +73,7 @@ public class MessageConverter
         var packetDatasLastSize = bytes.Length % PacketData.SIZE_MAX;
         if (packetDatasLastSize > 0)
         {
-            var packetDataAsBytesRange = (int)packetDatasCount..(int)(packetDatasCount + packetDatasLastSize);
-            var packetData = BytesToPacketData(bytes[packetDataAsBytesRange]);
+            var packetData = BytesToPacketData(bytes[(int)(packetDatasCount * PacketData.SIZE_MAX)..]);
             packetDatas.Add(packetData);
         }
 

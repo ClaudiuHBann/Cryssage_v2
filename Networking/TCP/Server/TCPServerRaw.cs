@@ -45,5 +45,10 @@ public class TCPServerRaw
             CallbackAccept(this, args);
         }
     }
+
+    public void Stop()
+    {
+        Server.Close();
+    }
 }
 }

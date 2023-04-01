@@ -21,6 +21,7 @@ public class TCPClientRaw
     protected TCPClientRaw(Socket client)
     {
         Client = client;
+        Connected = true;
     }
 
     public void Connect(string ip, ushort port, CallbackConnect? callback = null)
@@ -98,7 +99,7 @@ public class TCPClientRaw
     void OnSendReceiveShard(object? sender, SocketAsyncEventArgs args)
     {
         var bytesTransferredTotal = (uint)(args.Offset + args.BytesTransferred);
-        if (args.SocketError != SocketError.Success || args.Offset + args.BytesTransferred == args.Buffer?.Length)
+        if (args.SocketError != SocketError.Success || bytesTransferredTotal == args.Buffer?.Length)
         {
             if (args.LastOperation == SocketAsyncOperation.Send)
             {
@@ -115,6 +116,11 @@ public class TCPClientRaw
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
         var countNew = args.Buffer.Length - offsetNew;
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
+        if (countNew == 0)
+        {
+            return;
+        }
+
         args.SetBuffer(args.Buffer, offsetNew, countNew);
 
         if (args.LastOperation == SocketAsyncOperation.Send)
@@ -131,6 +137,11 @@ public class TCPClientRaw
                 OnSendReceiveShard(this, args);
             }
         }
+    }
+
+    public void Stop()
+    {
+        Client.Close();
     }
 }
 }

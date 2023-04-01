@@ -53,8 +53,8 @@ public class TCPClient : TCPClientRaw
                                                      bytesMetadata.CopyTo(bytes, 0);
                                                      bytesData.CopyTo(bytes, bytesMetadata.Length);
 
-                                                     var messageBytes = MessageConverter.BytesToMessage(bytes);
-                                                     var messageDisassembled = MessageManager.FromMessage(messageBytes);
+                                                     var message = MessageConverter.BytesToMessage(bytes);
+                                                     var messageDisassembled = MessageManager.FromMessage(message);
 
                                                      callback(error, messageDisassembled);
                                                  });

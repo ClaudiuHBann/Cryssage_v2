@@ -9,7 +9,7 @@ abstract partial class ITests
 
     protected Queue<Func<bool>> Modules = new();
 
-    protected virtual bool TestModules()
+    string GetThisName()
     {
         var thisName = ToString();
         if (thisName != null)
@@ -21,6 +21,13 @@ abstract partial class ITests
             thisName = "?";
         }
 
+        return thisName;
+    }
+
+    protected void TestModulesStart()
+    {
+        var thisName = GetThisName();
+
         if (Count++ > 0)
         {
             Console.WriteLine();
@@ -29,6 +36,11 @@ abstract partial class ITests
         Console.ForegroundColor = ConsoleColor.DarkYellow;
         Console.WriteLine($"\tPreparing {thisName} Test Modules...");
         Console.WriteLine($"\tStarting {thisName} Test Modules...");
+    }
+
+    protected bool TestModules()
+    {
+        TestModulesStart();
 
         while (Modules.Count > 0)
         {
@@ -43,12 +55,19 @@ abstract partial class ITests
             }
         }
 
+        TestModulesEnd();
+
+        return true;
+    }
+
+    protected void TestModulesEnd()
+    {
+        var thisName = GetThisName();
+
         Console.WriteLine($"\tEnding {thisName} Test Modules...");
         Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine($"\t{thisName} Test Modules PASSED...");
         Console.ForegroundColor = ConsoleColor.White;
-
-        return true;
     }
 
     [GeneratedRegex("\\t|\\n|\\r")]
@@ -72,7 +91,6 @@ abstract partial class ITests
                     RegexArgumentExpressionOneContinuouslySpace().Replace(argumentExpressionNew, " ");
             }
 
-            /*Console.WriteLine($"\t\t{filePath}:{lineNumber}\t {argumentExpressionNew} -> {expression}");*/
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"\t\t{argumentExpressionNew} failed...");
             Console.ForegroundColor = ConsoleColor.White;

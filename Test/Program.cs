@@ -1,4 +1,5 @@
-﻿using Test.ParserTests;
+﻿using Test.NetworkingTests;
+using Test.ParserTests;
 
 namespace Test
 {
@@ -9,6 +10,7 @@ class Program
         ManagerTests managerTests = new();
 
         managerTests.AddTest(new MessageTests());
+        managerTests.AddTest(new TCPTests());
 
         managerTests.Run();
     }

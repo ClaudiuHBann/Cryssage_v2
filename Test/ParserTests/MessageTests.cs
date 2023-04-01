@@ -53,7 +53,7 @@ class MessageTests : ITests
             return false;
         }
 
-        byte[] bytes = new byte[1000000];
+        byte[] bytes = new byte[1_000_000];
         for (int i = 0; i < bytes.Length; i++)
         {
             bytes[i] = (byte)i;
@@ -74,7 +74,7 @@ class MessageTests : ITests
     {
         var gu1d = Guid.NewGuid();
 
-        byte[] dataStart = new byte[1000000];
+        byte[] dataStart = new byte[1_000_000];
         for (int i = 0; i < dataStart.Length; i++)
         {
             dataStart[i] = (byte)i;

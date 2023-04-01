@@ -9,7 +9,7 @@ namespace Networking.TCP.Client
 using CallbackSend = Action<SocketError, uint>;
 using CallbackReceive = Action<SocketError, MessageDisassembled?>;
 
-class TCPClient : TCPClientRaw
+public class TCPClient : TCPClientRaw
 {
     public TCPClient() : base()
     {

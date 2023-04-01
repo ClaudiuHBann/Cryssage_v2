@@ -8,7 +8,7 @@ using CallbackSend = Action<SocketError, uint>;
 using CallbackReceive = Action<SocketError, byte[]?>;
 using CallbackDisconnect = Action<SocketError>;
 
-class TCPClientRaw
+public class TCPClientRaw
 {
     readonly Socket Client;
     bool Connected = false;

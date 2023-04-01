@@ -6,6 +6,10 @@ namespace Parser
 {
 public class MessageManager
 {
+    public static Message.Message ToMessage(byte[] bytes, Message.Message.Type type)
+    {
+        return ToMessage(bytes, type, Guid.NewGuid());
+    }
 
     public static Message.Message ToMessage(byte[] bytes, Message.Message.Type type, Guid guid)
     {

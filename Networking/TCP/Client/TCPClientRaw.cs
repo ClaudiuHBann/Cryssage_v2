@@ -10,8 +10,18 @@ using CallbackDisconnect = Action<SocketError>;
 
 class TCPClientRaw
 {
-    protected readonly Socket Client = new(SocketType.Stream, ProtocolType.Tcp);
-    protected bool Connected = false;
+    readonly Socket Client;
+    bool Connected = false;
+
+    protected TCPClientRaw()
+    {
+        Client = new(SocketType.Stream, ProtocolType.Tcp);
+    }
+
+    protected TCPClientRaw(Socket client)
+    {
+        Client = client;
+    }
 
     public void Connect(string ip, ushort port, CallbackConnect? callback = null)
     {

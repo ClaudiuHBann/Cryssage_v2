@@ -69,7 +69,7 @@ class TCPTests : ITests
                                                 messageDisassembled.Type == TEST_DATA_TYPE)
                                             {
                                                 client.Send(messageDisassembled.Stream, messageDisassembled.Type,
-                                                            (error, bytesTransferred) =>
+                                                            (error, _) =>
                                                             {
                                                                 if (error != SocketError.Success)
                                                                 {
@@ -78,8 +78,6 @@ class TCPTests : ITests
                                                                 }
 
                                                                 SucceededServer = true;
-                                                                PrintModuleTest(true, "TestServer");
-
                                                                 Interlocked.Increment(ref TestsTestedCount);
                                                             });
                                             }
@@ -120,8 +118,6 @@ class TCPTests : ITests
                                                        messageDisassembled.Type == TEST_DATA_TYPE)
                                                    {
                                                        SucceededClient = true;
-                                                       PrintModuleTest(true, "TestClient");
-
                                                        Interlocked.Increment(ref TestsTestedCount);
                                                    }
                                                    else

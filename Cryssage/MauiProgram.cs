@@ -1,29 +1,38 @@
-﻿using Microsoft.Extensions.Logging;
-using Cryssage.Data;
+﻿#if DEBUG
+using System.Runtime.InteropServices;
+#endif
+
+using Cryssage.Views;
 
 namespace Cryssage;
 
 public static class MauiProgram
 {
-	public static MauiApp CreateMauiApp()
-	{
-		var builder = MauiApp.CreateBuilder();
-		builder
-			.UseMauiApp<App>()
-			.ConfigureFonts(fonts =>
-			{
-				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-			});
-
-		builder.Services.AddMauiBlazorWebView();
-
 #if DEBUG
-		builder.Services.AddBlazorWebViewDeveloperTools();
-		builder.Logging.AddDebug();
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    static extern bool AllocConsole();
 #endif
 
-		builder.Services.AddSingleton<WeatherForecastService>();
+    public static MauiApp CreateMauiApp()
+    {
+        var builder = MauiApp.CreateBuilder();
+        builder
+            .UseMauiApp<App>()
+            .ConfigureFonts(fonts =>
+            {
+                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                fonts.AddFont("materialdesignicons-webfont.ttf", "IconFontTypes");
+            });
 
-		return builder.Build();
-	}
+        builder.Services.AddSingleton<MainPage>();
+        builder.Services.AddSingleton<UserView>();
+
+#if DEBUG
+        AllocConsole();
+#endif
+
+        return builder.Build();
+    }
 }

@@ -1,14 +1,291 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:local="clr-namespace:Cryssage"
              x:Class="Cryssage.MainPage"
-             BackgroundColor="{DynamicResource PageBackgroundColor}">
+             xmlns:local="clr-namespace:Cryssage"
+             xmlns:views="clr-namespace:Cryssage.Views"
+             xmlns:helpers="clr-namespace:Cryssage.Helpers"
+             xmlns:convertersCUIM="clr-namespace:Cryssage.Converters.ConverterUIMessage"
+             xmlns:convertersCDM="clr-namespace:Cryssage.Converters.ConverterDataMessage"
+             xmlns:models="clr-namespace:Cryssage.Models"
+             Shell.NavBarIsVisible="False">
 
-    <BlazorWebView x:Name="blazorWebView" HostPage="wwwroot/index.html">
-        <BlazorWebView.RootComponents>
-            <RootComponent Selector="#app" ComponentType="{x:Type local:Main}" />
-        </BlazorWebView.RootComponents>
-    </BlazorWebView>
+  <ContentPage.Resources>
+    <DataTemplate x:Key="DataTemplateMessageText"
+                  x:DataType="{x:Type models:MessageTextModel}">
+
+      <Grid>
+
+        <Border MinimumWidthRequest="250"
+                MaximumWidthRequest="500"
+                Stroke="#0b141a"
+                Margin="{Binding Mine, Converter={StaticResource converterMineToMargin}}"
+                BackgroundColor="{Binding Mine, Converter={StaticResource converterMineToBackgroundColor}}"
+                HorizontalOptions="{Binding Mine, Converter={StaticResource converterMineToLayoutOption}}">
+
+          <Border.StrokeShape>
+            <RoundRectangle CornerRadius="10"/>
+          </Border.StrokeShape>
+
+          <Grid>
+
+            <Grid.RowDefinitions>
+              <RowDefinition Height="50" />
+              <RowDefinition Height="*" />
+              <RowDefinition Height="50" />
+            </Grid.RowDefinitions>
+
+            <Label Text="{Binding Sender}"
+                   VerticalOptions="Center"
+                   Padding="14,0,0,0" />
+
+            <Label Grid.Row="1"
+                   VerticalOptions="Center"
+                   Padding="10,0"
+                   LineBreakMode="WordWrap"
+                   Text="{Binding Text}" />
+
+            <Label Grid.Row="2"
+                   VerticalOptions="End"
+                   Margin="0,0,10,3"
+                   Text="{Binding Timestamp, Converter={StaticResource converterTimestampToTime}}"
+                   HorizontalOptions="End"/>
+
+          </Grid>
+
+        </Border>
+
+      </Grid>
+
+    </DataTemplate>
+
+    <DataTemplate x:Key="DataTemplateMessageFile"
+                  x:DataType="{x:Type models:MessageFileModel}">
+
+      <Grid>
+
+        <Border MinimumWidthRequest="250"
+                MaximumWidthRequest="500"
+                MinimumHeightRequest="50"
+                MaximumHeightRequest="100"
+                Stroke="#0b141a"
+                Margin="{Binding Mine, Converter={StaticResource converterMineToMargin}}"
+                BackgroundColor="{Binding Mine, Converter={StaticResource converterMineToBackgroundColor}}"
+                HorizontalOptions="{Binding Mine, Converter={StaticResource converterMineToLayoutOption}}">
+
+          <Border.StrokeShape>
+            <RoundRectangle CornerRadius="10"/>
+          </Border.StrokeShape>
+
+          <Grid>
+
+            <Grid.RowDefinitions>
+              <RowDefinition Height="50*" />
+              <RowDefinition Height="25*" />
+              <RowDefinition Height="25*" />
+            </Grid.RowDefinitions>
+
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="25*" />
+              <ColumnDefinition Width="50*" />
+              <ColumnDefinition Width="25*" />
+            </Grid.ColumnDefinitions>
+
+            <Image Grid.RowSpan="2"
+                   Source="{Binding Icon}" />
+
+            <Label Grid.Column="1"
+                   VerticalOptions="Center"
+                   Text="{Binding Name}" />
+
+            <Label Grid.Row="1"
+                   Grid.Column="1"
+                   VerticalOptions="Center"
+                   Text="{Binding Size, Converter={StaticResource converterSizeAsString}}" />
+
+            <ImageButton Grid.Column="2"
+                         BackgroundColor="{Binding Mine, Converter={StaticResource converterMineToBackgroundColor}}"
+                         Grid.RowSpan="2">
+              <ImageButton.Source>
+                <FontImageSource Glyph="{x:Static helpers:HelperFontIcons.Download}"
+                                 FontFamily="IconFontTypes"
+                                 Size="Large" />
+              </ImageButton.Source>
+            </ImageButton>
+
+            <Label Grid.Row="2"
+                   Grid.Column="2"
+                   VerticalOptions="End"
+                   Margin="0,0,10,3"
+                   Text="{Binding Timestamp, Converter={StaticResource converterTimestampToTime}}"
+                   HorizontalOptions="End" />
+
+          </Grid>
+
+        </Border>
+
+      </Grid>
+
+    </DataTemplate>
+
+    <local:DataTemplateSelectorMessage x:Key="dataTemplateSelectorMessage"
+                                       MessageFile="{StaticResource DataTemplateMessageFile}"
+                                       MessageText="{StaticResource DataTemplateMessageText}" />
+
+    <convertersCUIM:LayoutOption x:Key="converterMineToLayoutOption" />
+    <convertersCUIM:BackgroundColor x:Key="converterMineToBackgroundColor" />
+    <convertersCUIM:Margin x:Key="converterMineToMargin" />
+
+    <convertersCDM:Time x:Key="converterTimestampToTime" />
+    <convertersCDM:Size x:Key="converterSizeAsString" />
+  </ContentPage.Resources>
+
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="20*" />
+      <ColumnDefinition Width="80*" />
+    </Grid.ColumnDefinitions>
+
+    <Grid BackgroundColor="#111b21">
+
+      <CollectionView x:Name="collectionViewUsers"
+                      SelectionMode="Single"
+                      SelectionChanged="OnSelectionChangedCollectionViewUsers">
+        <CollectionView.ItemTemplate>
+          <DataTemplate x:DataType="{x:Type models:UserModel}">
+
+            <Grid Margin="0,0,0,3"
+                  MinimumWidthRequest="275"
+                  MaximumWidthRequest="350"
+                  HeightRequest="75"
+                  BackgroundColor="#111b21">
+
+              <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup Name="CommonStates">
+                  <VisualState Name="Normal" />
+                  <VisualState Name="Selected">
+                    <VisualState.Setters>
+                      <Setter Property="BackgroundColor" Value="#2a3942" />
+                    </VisualState.Setters>
+                  </VisualState>
+
+                </VisualStateGroup>
+              </VisualStateManager.VisualStateGroups>
+
+              <Grid.RowDefinitions>
+                <RowDefinition Height="50*" />
+                <RowDefinition Height="50*" />
+              </Grid.RowDefinitions>
+
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="20*" />
+                <ColumnDefinition Width="55*" />
+                <ColumnDefinition Width="25*" />
+              </Grid.ColumnDefinitions>
+
+              <Image Grid.RowSpan="2"
+                     VerticalOptions="Center"
+                     Source="{Binding Avatar}" />
+
+              <Label Grid.Column="1"
+                     VerticalOptions="Center"
+                     Margin="5,0,0,0"
+                     Text="{Binding Name}" />
+
+              <Label Grid.Column="2"
+                     VerticalOptions="Center"
+                     HorizontalTextAlignment="End"
+                     Margin="0,0,5,0"
+                     Text="{Binding Time, Converter={StaticResource converterTimestampToTime}}" />
+
+              <Label Grid.Column="1"
+                     Grid.Row="1"
+                     Grid.ColumnSpan="2"
+                     VerticalOptions="Center"
+                     Margin="5,0,0,0"
+                     Text="{Binding Message}" />
+
+            </Grid>
+
+          </DataTemplate>
+        </CollectionView.ItemTemplate>
+      </CollectionView>
+
+    </Grid>
+
+    <Grid Grid.Column="1"
+          BackgroundColor="#0b141a">
+
+      <Grid>
+
+        <Grid.RowDefinitions>
+          <RowDefinition Height="80*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Label HorizontalOptions="Center"
+               VerticalOptions="Center"
+               HorizontalTextAlignment="Center"
+               VerticalTextAlignment="Center"
+               TextColor="#2d383f"
+               FontSize="Large"
+               x:Name="labelMessages"
+               Text="{x:Static helpers:HelperStrings.MessageUserSelectedNone}" />
+
+        <CollectionView x:Name="collectionViewMessages"
+                        ItemTemplate="{StaticResource dataTemplateSelectorMessage}"/>
+
+        <Grid Grid.Row="1"
+              MaximumHeightRequest="100"
+              MinimumHeightRequest="50"
+              BackgroundColor="#202c33">
+
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="10*" />
+            <ColumnDefinition Width="10*" />
+            <ColumnDefinition Width="70*" />
+            <ColumnDefinition Width="10*" />
+          </Grid.ColumnDefinitions>
+
+          <ImageButton>
+            <ImageButton.Source>
+              <FontImageSource Glyph="{x:Static helpers:HelperFontIcons.Emoticon}"
+                               FontFamily="IconFontTypes"
+                               Size="Large" />
+            </ImageButton.Source>
+          </ImageButton>
+
+          <ImageButton Grid.Column="1">
+            <ImageButton.Source>
+              <FontImageSource Glyph="{x:Static helpers:HelperFontIcons.Paperclip}"
+                               FontFamily="IconFontTypes"
+                               Size="Large" />
+            </ImageButton.Source>
+          </ImageButton>
+
+          <Editor Grid.Column="2"
+                  Placeholder="Type a message"
+                  x:Name="editor"
+                  TextChanged="OnTextChangedEditor"
+                  IsTextPredictionEnabled="True"
+                  IsSpellCheckEnabled="True" />
+
+          <ImageButton Grid.Column="3"
+                       Clicked="OnClickButtonSendRecord"
+                       x:Name="buttonSendRecord">
+            <ImageButton.Source>
+              <FontImageSource Glyph="{x:Static helpers:HelperFontIcons.Microphone}"
+                               FontFamily="IconFontTypes"
+                               x:Name="buttonSendRecordIcon"
+                               Size="Large" />
+            </ImageButton.Source>
+          </ImageButton>
+
+        </Grid>
+
+      </Grid>
+
+    </Grid>
+  </Grid>
 
 </ContentPage>

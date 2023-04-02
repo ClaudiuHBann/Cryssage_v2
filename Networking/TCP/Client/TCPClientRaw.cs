@@ -110,6 +110,8 @@ public class TCPClientRaw
                 args.SetBuffer(args.Buffer, 0, (int)bytesTransferredTotal);
                 ((CallbackReceive?)args.UserToken)?.Invoke(args.SocketError, args.Buffer);
             }
+
+            return;
         }
 
         var offsetNew = (int)bytesTransferredTotal;

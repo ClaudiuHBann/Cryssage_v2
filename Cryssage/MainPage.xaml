@@ -266,6 +266,8 @@
           <Editor Grid.Column="2"
                   Placeholder="Type a message"
                   x:Name="editor"
+                  Keyboard="Chat"
+                  HeightRequest="100"
                   TextChanged="OnTextChangedEditor"
                   IsTextPredictionEnabled="True"
                   IsSpellCheckEnabled="True" />

@@ -6,11 +6,6 @@ namespace Cryssage.Models
 {
 public partial class UserModel : ObservableObject
 {
-    public UserModel()
-    {
-        MessageView = new();
-    }
-
     [ObservableProperty]
     string id;
 
@@ -29,6 +24,11 @@ public partial class UserModel : ObservableObject
     [ObservableProperty]
     MessageView messageView;
 
+    public UserModel()
+    {
+        MessageView = new();
+    }
+
     public UserModel(string id, string avatar, string name, DateTime time, string message)
     {
         Id = id;
@@ -36,6 +36,8 @@ public partial class UserModel : ObservableObject
         Name = name;
         Time = time;
         Message = message;
+
+        MessageView = new();
     }
 }
 }

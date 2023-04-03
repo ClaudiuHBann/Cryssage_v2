@@ -5,7 +5,7 @@ namespace Parser.Message.Header
 {
 public class HeaderMetadata
 {
-    public static readonly uint SIZE = Utility.GUID_SIZE + sizeof(Message.Type) + sizeof(uint);
+    public const uint SIZE = Utility.GUID_SIZE + sizeof(Message.Type) + sizeof(uint);
 
     public Guid GUID { get; } = Guid.Empty;
     public Message.Type Type { get; } = Message.Type.NONE;

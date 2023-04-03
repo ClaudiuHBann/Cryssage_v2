@@ -6,8 +6,8 @@ namespace Parser.Message.Packet
 {
 public class PacketData
 {
-    public static readonly uint SIZE_MAX = Utility.PACKET_DATA_SIZE_MAX;
-    public static readonly uint CONTENT_SIZE_MAX = Utility.PACKET_DATA_CONTENT_SIZE_MAX;
+    public const uint SIZE_MAX = Utility.PACKET_DATA_SIZE_MAX;
+    public const uint CONTENT_SIZE_MAX = Utility.PACKET_DATA_CONTENT_SIZE_MAX;
 
     public HeaderData Header { get; }
     public byte[] Content { get; }

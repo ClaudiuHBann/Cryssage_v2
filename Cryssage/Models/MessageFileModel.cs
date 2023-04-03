@@ -2,15 +2,15 @@
 
 namespace Cryssage.Models
 {
-    public partial class MessageFileModel : MessageModel
-    {
-        [ObservableProperty]
-        ImageSource icon;
+public partial class MessageFileModel : MessageModel
+{
+    [ObservableProperty]
+    ImageSource icon;
 
-        [ObservableProperty]
-        string name;
+    [ObservableProperty]
+    string name;
 
-        [ObservableProperty]
-        int size;
-    }
+    [ObservableProperty]
+    int size;
+}
 }

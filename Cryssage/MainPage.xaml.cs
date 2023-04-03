@@ -37,7 +37,7 @@ public partial class MainPage : ContentPage
 
                 MainThread.BeginInvokeOnMainThread(() =>
                                                    {
-                                                       AddUserMessage(Generators.GeneratorModels.CreateMessageTextModel(
+                                                       AddUserMessage(new MessageTextModel(
                                                            messageDisassembled.GUID.ToString(), MessageType.TEXT, "You",
                                                            DateTime.Now, MessageState.SEEN, false, messageAsString));
 
@@ -66,7 +66,7 @@ public partial class MainPage : ContentPage
         collectionViewUsers.ItemsSource = viewUser.Items;
 
         // create and add yourself
-        var userYou = Generators.GeneratorModels.CreateUserYou();
+        var userYou = new UserModel("Id", "dotnet_bot.png", "You", DateTime.MinValue, "");
         viewUser.Items.Add(userYou);
 
         server.Start((error, client) =>
@@ -103,8 +103,8 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        AddUserMessage(Generators.GeneratorModels.CreateMessageTextModel("", MessageType.TEXT, "You", DateTime.Now,
-                                                                         MessageState.SEEN, true, editor.Text));
+        AddUserMessage(
+            new MessageTextModel("", MessageType.TEXT, "You", DateTime.Now, MessageState.SEEN, true, editor.Text));
 
         // send message
         client.Send(Encoding.Unicode.GetBytes(editor.Text), Message.Type.TEXT);

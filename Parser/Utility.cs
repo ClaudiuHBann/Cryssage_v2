@@ -4,9 +4,9 @@ namespace Parser
 {
 class Utility
 {
-    public static readonly uint GUID_SIZE = 16;
+    public const uint GUID_SIZE = 16;
 
-    public static readonly uint PACKET_DATA_SIZE_MAX = 8192;
-    public static readonly uint PACKET_DATA_CONTENT_SIZE_MAX = PACKET_DATA_SIZE_MAX - HeaderData.SIZE;
+    public const uint PACKET_DATA_SIZE_MAX = 8192;
+    public const uint PACKET_DATA_CONTENT_SIZE_MAX = PACKET_DATA_SIZE_MAX - HeaderData.SIZE;
 }
 }

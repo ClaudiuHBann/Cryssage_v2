@@ -4,7 +4,7 @@ namespace Parser.Message.Header
 {
 public class HeaderData
 {
-    public static readonly uint SIZE = Utility.GUID_SIZE + sizeof(uint);
+    public const uint SIZE = Utility.GUID_SIZE + sizeof(uint);
 
     public Guid GUID { get; } = Guid.Empty;
     public uint Index { get; } = 0;

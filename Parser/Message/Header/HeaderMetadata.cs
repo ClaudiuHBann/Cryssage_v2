@@ -8,12 +8,12 @@ public class HeaderMetadata
     public const uint SIZE = Utility.GUID_SIZE + sizeof(Message.Type) + sizeof(uint);
 
     public Guid GUID { get; } = Guid.Empty;
-    public Message.Type Type { get; } = Message.Type.NONE;
+    public Message.Type Type { get; } = Message.Type.UNKNOWN;
     public uint Size { get; } = 0;
 
     public HeaderMetadata(Guid guid, Message.Type type, uint size)
     {
-        Debug.Assert(Message.Type.NONE < type && type < Message.Type.COUNT);
+        Debug.Assert(Message.Type.UNKNOWN < type && type < Message.Type.COUNT);
         Type = type;
 
         GUID = guid;

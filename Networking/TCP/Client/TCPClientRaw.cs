@@ -5,11 +5,38 @@ namespace Networking.TCP.Client
 {
 using CallbackConnect = Action<SocketError, bool>;
 using CallbackSend = Action<SocketError, uint>;
+using CallbackSendShard = Action<SocketError, uint>;
 using CallbackReceive = Action<SocketError, byte[]?>;
+using CallbackReceiveShard = Action<SocketError, byte[]?>;
 using CallbackDisconnect = Action<SocketError>;
 
 public class TCPClientRaw
 {
+    class SAEAUserTokenSend
+    {
+        public CallbackSend? CallbackSend { get; set; } = null;
+        public CallbackSendShard? CallbackSendShard { get; set; } = null;
+
+        public SAEAUserTokenSend(CallbackSend? callbackSend = null, CallbackSendShard? callbackSendShard = null)
+        {
+            CallbackSend = callbackSend;
+            CallbackSendShard = callbackSendShard;
+        }
+    }
+
+    class SAEAUserTokenReceive
+    {
+        public CallbackReceive? CallbackReceive { get; set; } = null;
+        public CallbackReceiveShard? CallbackReceiveShard { get; set; } = null;
+
+        public SAEAUserTokenReceive(CallbackReceive? callbackReceive = null,
+                                    CallbackReceiveShard? callbackReceiveShard = null)
+        {
+            CallbackReceive = callbackReceive;
+            CallbackReceiveShard = callbackReceiveShard;
+        }
+    }
+
     readonly Socket Client;
     bool Connected = false;
 
@@ -40,15 +67,17 @@ public class TCPClientRaw
         }
     }
 
-    protected void SendAll(byte[] stream, CallbackSend? callback = null)
+    protected void SendAll(byte[] stream, CallbackSend? callbackSend = null,
+                           CallbackSendShard? callbackSendShard = null)
     {
         if (!Connected)
         {
-            callback?.Invoke(SocketError.NotConnected, 0);
+            callbackSend?.Invoke(SocketError.NotConnected, 0);
+            callbackSendShard?.Invoke(SocketError.NotConnected, 0);
             return;
         }
 
-        SocketAsyncEventArgs args = new() { UserToken = callback };
+        SocketAsyncEventArgs args = new() { UserToken = new SAEAUserTokenSend(callbackSend, callbackSendShard) };
         args.SetBuffer(stream, 0, stream.Length);
         args.Completed += OnSendReceiveShard;
 
@@ -58,15 +87,18 @@ public class TCPClientRaw
         }
     }
 
-    protected void ReceiveAll(byte[] stream, CallbackReceive? callback = null)
+    protected void ReceiveAll(byte[] stream, CallbackReceive? callbackReceive = null,
+                              CallbackReceiveShard? callbackReceiveShard = null)
     {
         if (!Connected)
         {
-            callback?.Invoke(SocketError.NotConnected, null);
+            callbackReceive?.Invoke(SocketError.NotConnected, null);
+            callbackReceiveShard?.Invoke(SocketError.NotConnected, null);
             return;
         }
 
-        SocketAsyncEventArgs args = new() { UserToken = callback };
+        SocketAsyncEventArgs args =
+            new() { UserToken = new SAEAUserTokenReceive(callbackReceive, callbackReceiveShard) };
         args.SetBuffer(stream, 0, stream.Length);
         args.Completed += OnSendReceiveShard;
 
@@ -103,12 +135,14 @@ public class TCPClientRaw
         {
             if (args.LastOperation == SocketAsyncOperation.Send)
             {
-                ((CallbackSend?)args.UserToken)?.Invoke(args.SocketError, bytesTransferredTotal);
+                var userTokenSend = (SAEAUserTokenSend?)args.UserToken;
+                userTokenSend?.CallbackSend?.Invoke(args.SocketError, bytesTransferredTotal);
             }
             else
             {
+                var userTokenReceive = (SAEAUserTokenReceive?)args.UserToken;
                 args.SetBuffer(args.Buffer, 0, (int)bytesTransferredTotal);
-                ((CallbackReceive?)args.UserToken)?.Invoke(args.SocketError, args.Buffer);
+                userTokenReceive?.CallbackReceive?.Invoke(args.SocketError, args.Buffer);
             }
 
             return;
@@ -123,10 +157,14 @@ public class TCPClientRaw
             return;
         }
 
+        var userTokenReceiveShardBufferRange = args.Offset..offsetNew;
         args.SetBuffer(args.Buffer, offsetNew, countNew);
 
         if (args.LastOperation == SocketAsyncOperation.Send)
         {
+            var userTokenSend = (SAEAUserTokenSend?)args.UserToken;
+            userTokenSend?.CallbackSendShard?.Invoke(args.SocketError, bytesTransferredTotal);
+
             if (!Client.SendAsync(args))
             {
                 OnSendReceiveShard(this, args);
@@ -134,6 +172,10 @@ public class TCPClientRaw
         }
         else
         {
+            var userTokenReceive = (SAEAUserTokenReceive?)args.UserToken;
+            userTokenReceive?.CallbackReceiveShard?.Invoke(args.SocketError,
+                                                           args.Buffer[userTokenReceiveShardBufferRange]);
+
             if (!Client.ReceiveAsync(args))
             {
                 OnSendReceiveShard(this, args);

@@ -7,7 +7,9 @@ using Parser.Message.Header;
 namespace Networking.TCP.Client
 {
 using CallbackSend = Action<SocketError, uint>;
+using CallbackSendShard = Action<SocketError, uint>;
 using CallbackReceive = Action<SocketError, MessageDisassembled?>;
+using CallbackReceiveShard = Action<SocketError, byte[]?>;
 
 public class TCPClient : TCPClientRaw
 {
@@ -19,46 +21,50 @@ public class TCPClient : TCPClientRaw
     {
     }
 
-    public void Send(byte[] stream, Message.Type type, CallbackSend? callback = null)
+    public void Send(byte[] stream, Message.Type type, CallbackSend? callbackSend = null,
+                     CallbackSendShard? callbackSendShard = null)
     {
         var message = MessageManager.ToMessage(stream, type);
         var messageBytes = MessageConverter.MessageToBytes(message);
 
-        SendAll(messageBytes, callback);
+        SendAll(messageBytes, callbackSend, callbackSendShard);
     }
 
-    public void Receive(CallbackReceive callback)
+    public void Receive(CallbackReceive callbackReceive, CallbackReceiveShard? callbackReceiveShard = null)
     {
         byte[] metadataBytes = new byte[HeaderMetadata.SIZE];
-        ReceiveAll(metadataBytes, (error, bytesMetadata) =>
+        ReceiveAll(metadataBytes,
+                   (error, bytesMetadata) =>
+                   {
+                       if (error != SocketError.Success || bytesMetadata == null)
+                       {
+                           callbackReceive(error, null);
+                           return;
+                       }
+
+                       var packetMetadata = MessageConverter.BytesToPacketMetadata(bytesMetadata);
+                       var data = new byte[packetMetadata.Header.Size];
+                       ReceiveAll(data,
+                                  (error, bytesData) =>
                                   {
-                                      if (error != SocketError.Success || bytesMetadata == null)
+                                      if (error != SocketError.Success || bytesData == null)
                                       {
-                                          callback(error, null);
+                                          callbackReceive(error, null);
                                           return;
                                       }
 
-                                      var packetMetadata = MessageConverter.BytesToPacketMetadata(bytesMetadata);
-                                      var data = new byte[packetMetadata.Header.Size];
-                                      ReceiveAll(data,
-                                                 (error, bytesData) =>
-                                                 {
-                                                     if (error != SocketError.Success || bytesData == null)
-                                                     {
-                                                         callback(error, null);
-                                                         return;
-                                                     }
+                                      var bytes = new byte[bytesMetadata.Length + bytesData.Length];
+                                      bytesMetadata.CopyTo(bytes, 0);
+                                      bytesData.CopyTo(bytes, bytesMetadata.Length);
 
-                                                     var bytes = new byte[bytesMetadata.Length + bytesData.Length];
-                                                     bytesMetadata.CopyTo(bytes, 0);
-                                                     bytesData.CopyTo(bytes, bytesMetadata.Length);
+                                      var message = MessageConverter.BytesToMessage(bytes);
+                                      var messageDisassembled = MessageManager.FromMessage(message);
 
-                                                     var message = MessageConverter.BytesToMessage(bytes);
-                                                     var messageDisassembled = MessageManager.FromMessage(message);
-
-                                                     callback(error, messageDisassembled);
-                                                 });
-                                  });
+                                      callbackReceive(error, messageDisassembled);
+                                  },
+                                  callbackReceiveShard);
+                   },
+                   callbackReceiveShard);
     }
 }
 }

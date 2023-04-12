@@ -2,11 +2,11 @@
 
 namespace Networking.Protocol.Context.Operation
 {
-public class IContextOperationText : IContextOperation
+public class ContextOperationText : IContextOperation
 {
     public Guid GUIDText { get; set; }
 
-    public IContextOperationText(Guid guidChat, Guid guidText) : base(Message.Type.TEXT, guidChat)
+    public ContextOperationText(Guid guidChat, Guid guidText) : base(Message.Type.TEXT, guidChat)
     {
         GUIDText = guidText;
     }

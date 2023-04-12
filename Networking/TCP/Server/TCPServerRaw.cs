@@ -1,13 +1,15 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 
+using Networking.Protocol;
+using Networking.Protocol.Context.Operation;
 using Networking.TCP.Client;
 
 namespace Networking.TCP.Server
 {
 using CallbackAccept = Action<SocketError, TCPClient>;
 
-public class TCPServerRaw
+public class TCPServerRaw : ISubscriber
 {
     readonly Socket Server;
 
@@ -36,7 +38,11 @@ public class TCPServerRaw
     {
         if (args.SocketError == SocketError.Success && args.AcceptSocket != null)
         {
-            ((CallbackAccept?)args.UserToken)?.Invoke(args.SocketError, new(args.AcceptSocket));
+            TCPClient client = new(args.AcceptSocket);
+
+            Notify(new IContextOperationAccept(Guid.Empty, client)); // TODO: the guid chat is empty
+
+            ((CallbackAccept?)args.UserToken)?.Invoke(args.SocketError, client);
             args.AcceptSocket = null;
         }
 

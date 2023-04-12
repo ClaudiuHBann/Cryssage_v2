@@ -1,5 +1,5 @@
 ﻿using System.Net.Sockets;
-
+using Networking.Protocol.Context.Operation;
 using Parser;
 using Parser.Message;
 using Parser.Message.Header;
@@ -9,7 +9,7 @@ namespace Networking.TCP.Client
 using CallbackSend = Action<SocketError, uint>;
 using CallbackSendShard = Action<SocketError, uint>;
 using CallbackReceive = Action<SocketError, MessageDisassembled?>;
-using CallbackReceiveShard = Action<SocketError, byte[]?>;
+using CallbackReceiveShard = Action<SocketError, uint>;
 
 public class TCPClient : TCPClientRaw
 {
@@ -22,15 +22,16 @@ public class TCPClient : TCPClientRaw
     }
 
     public void Send(byte[] stream, Message.Type type, CallbackSend? callbackSend = null,
-                     CallbackSendShard? callbackSendShard = null)
+                     CallbackSendShard? callbackSendShard = null, IContextOperation? contextOperation = null)
     {
         var message = MessageManager.ToMessage(stream, type);
         var messageBytes = MessageConverter.MessageToBytes(message);
 
-        SendAll(messageBytes, callbackSend, callbackSendShard);
+        SendAll(messageBytes, callbackSend, callbackSendShard, contextOperation);
     }
 
-    public void Receive(CallbackReceive callbackReceive, CallbackReceiveShard? callbackReceiveShard = null)
+    public void Receive(CallbackReceive callbackReceive, CallbackReceiveShard? callbackReceiveShard = null,
+                        IContextOperation? contextOperation = null)
     {
         byte[] metadataBytes = new byte[HeaderMetadata.SIZE];
         ReceiveAll(metadataBytes,
@@ -62,9 +63,9 @@ public class TCPClient : TCPClientRaw
 
                                       callbackReceive(error, messageDisassembled);
                                   },
-                                  callbackReceiveShard);
+                                  callbackReceiveShard, contextOperation);
                    },
-                   callbackReceiveShard);
+                   callbackReceiveShard, contextOperation);
     }
 }
 }

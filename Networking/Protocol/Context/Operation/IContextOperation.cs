@@ -18,6 +18,12 @@ public class IContextOperation
     public OperationState State { get; set; } = OperationState.UNKNOWN;
     public float Percentage { get; set; } = 0f;
 
+    public float SetPercentage(float value, float valueOf)
+    {
+        Percentage = value / valueOf * 100f;
+        return Percentage;
+    }
+
     public IContextOperation(Message.Type type, Guid guidChat)
     {
         Type = type;

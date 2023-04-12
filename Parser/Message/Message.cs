@@ -7,7 +7,7 @@ public class Message
     public enum Type : byte
     {
         UNKNOWN,
-        PING,
+        DISCOVER,
         TEXT,
         FILE,
         COUNT

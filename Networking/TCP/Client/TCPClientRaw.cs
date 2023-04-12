@@ -1,19 +1,17 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-
-using Networking.Protocol;
 using Networking.Protocol.Context.Operation;
 
 namespace Networking.TCP.Client
 {
-using CallbackConnect = Action<SocketError, bool>;
-using CallbackSend = Action<SocketError, uint>;
-using CallbackSendShard = Action<SocketError, uint>;
-using CallbackReceive = Action<SocketError, byte[]?>;
-using CallbackReceiveShard = Action<SocketError, uint>;
-using CallbackDisconnect = Action<SocketError>;
+    using CallbackConnect = Action<SocketError, bool>;
+    using CallbackSend = Action<SocketError, uint>;
+    using CallbackSendShard = Action<SocketError, uint>;
+    using CallbackReceive = Action<SocketError, byte[]?>;
+    using CallbackReceiveShard = Action<SocketError, uint>;
+    using CallbackDisconnect = Action<SocketError>;
 
-public class TCPClientRaw : ISubscriber
+    public class TCPClientRaw : ISubscriber
 {
     class SAEAUserTokenSend
     {

@@ -6,11 +6,13 @@ public class Message
 {
     public enum Type : byte
     {
-        UNKNOWN,
-        DISCOVER,
-        TEXT,
-        FILE,
-        COUNT
+        UNKNOWN,      // unknown message
+        DISCOVER,     // discover clients message
+        TEXT,         // text message
+        FILE_INFO,    // file info message
+        FILE_REQUEST, // file request to download message
+        FILE_DATA,    // file data from the file request message
+        COUNT         // used to get the size of the enum
     }
 
     public PacketMetadata PacketMetadata { get; }

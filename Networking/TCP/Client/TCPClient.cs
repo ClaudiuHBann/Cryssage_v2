@@ -1,17 +1,18 @@
-﻿using System.Net.Sockets;
-using Networking.Protocol.Context.Operation;
+﻿using System.Net;
+using System.Net.Sockets;
+using Networking.Context;
 using Parser;
 using Parser.Message;
 using Parser.Message.Header;
 
 namespace Networking.TCP.Client
 {
-using CallbackSend = Action<SocketError, uint>;
-using CallbackSendShard = Action<SocketError, uint>;
-using CallbackReceive = Action<SocketError, MessageDisassembled?>;
-using CallbackReceiveShard = Action<SocketError, uint>;
+    using CallbackSend = Action<SocketError, uint>;
+    using CallbackSendShard = Action<SocketError, uint>;
+    using CallbackReceive = Action<SocketError, MessageDisassembled?>;
+    using CallbackReceiveShard = Action<SocketError, uint>;
 
-public class TCPClient : TCPClientRaw
+    public class TCPClient : TCPClientRaw
 {
     public TCPClient() : base()
     {
@@ -21,8 +22,13 @@ public class TCPClient : TCPClientRaw
     {
     }
 
+    public EndPoint? GetEndpointRemote()
+    {
+        return Client.RemoteEndPoint;
+    }
+
     public void Send(byte[] stream, Message.Type type, CallbackSend? callbackSend = null,
-                     CallbackSendShard? callbackSendShard = null, IContextOperation? contextOperation = null)
+                     CallbackSendShard? callbackSendShard = null, IContext? contextOperation = null)
     {
         var message = MessageManager.ToMessage(stream, type);
         var messageBytes = MessageConverter.MessageToBytes(message);
@@ -31,7 +37,7 @@ public class TCPClient : TCPClientRaw
     }
 
     public void Receive(CallbackReceive callbackReceive, CallbackReceiveShard? callbackReceiveShard = null,
-                        IContextOperation? contextOperation = null)
+                        IContext? contextOperation = null)
     {
         byte[] metadataBytes = new byte[HeaderMetadata.SIZE];
         ReceiveAll(metadataBytes,

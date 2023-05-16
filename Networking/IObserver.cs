@@ -1,9 +1,9 @@
-﻿using Networking.Protocol.Context.Operation;
+﻿using Networking.Context;
 
 namespace Networking
 {
     public interface IObserver
     {
-        void Update(ISubscriber subject, IContextOperation contextOperation);
+        void Update(ISubscriber subject, IContext contextOperation);
     }
 }

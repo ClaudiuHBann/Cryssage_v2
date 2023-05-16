@@ -1,4 +1,4 @@
-﻿using Networking.Protocol.Context.Operation;
+﻿using Networking.Context;
 
 namespace Networking
 {
@@ -16,7 +16,7 @@ namespace Networking
             Observers.Remove(observer);
         }
 
-        protected virtual void Notify(IContextOperation contextOperation)
+        protected virtual void Notify(IContext contextOperation)
         {
             foreach (var observer in Observers)
             {

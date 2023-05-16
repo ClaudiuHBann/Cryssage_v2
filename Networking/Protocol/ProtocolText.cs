@@ -1,13 +1,13 @@
-﻿using Networking.Protocol.Context.Operation;
+﻿using Networking.Context;
 using Parser.Message;
 
 namespace Networking.Protocol
 {
-public class ProtocolText : IProtocol
+    public class ProtocolText : IProtocol
 {
-    public ContextOperationText ContextOperation { get; set; }
+    public ContextText ContextOperation { get; set; }
 
-    public ProtocolText(ContextOperationText contextOperation)
+    public ProtocolText(ContextText contextOperation)
     {
         ContextOperation = contextOperation;
     }

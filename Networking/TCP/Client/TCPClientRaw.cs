@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using Networking.Protocol.Context.Operation;
+using Networking.Context;
 
 namespace Networking.TCP.Client
 {
@@ -17,10 +17,10 @@ namespace Networking.TCP.Client
     {
         public CallbackSend? CallbackSend { get; set; } = null;
         public CallbackSendShard? CallbackSendShard { get; set; } = null;
-        public IContextOperation? ContextOperation { get; set; } = null;
+        public IContext? ContextOperation { get; set; } = null;
 
         public SAEAUserTokenSend(CallbackSend? callbackSend = null, CallbackSendShard? callbackSendShard = null,
-                                 IContextOperation? contextOperation = null)
+                                 IContext? contextOperation = null)
         {
             CallbackSend = callbackSend;
             CallbackSendShard = callbackSendShard;
@@ -32,11 +32,11 @@ namespace Networking.TCP.Client
     {
         public CallbackReceive? CallbackReceive { get; set; } = null;
         public CallbackReceiveShard? CallbackReceiveShard { get; set; } = null;
-        public IContextOperation? ContextOperation { get; set; } = null;
+        public IContext? ContextOperation { get; set; } = null;
 
         public SAEAUserTokenReceive(CallbackReceive? callbackReceive = null,
                                     CallbackReceiveShard? callbackReceiveShard = null,
-                                    IContextOperation? contextOperation = null)
+                                    IContext? contextOperation = null)
         {
             CallbackReceive = callbackReceive;
             CallbackReceiveShard = callbackReceiveShard;
@@ -44,7 +44,7 @@ namespace Networking.TCP.Client
         }
     }
 
-    readonly Socket Client;
+    protected Socket Client { get; }
     bool Connected = false;
 
     protected TCPClientRaw()
@@ -75,7 +75,7 @@ namespace Networking.TCP.Client
     }
 
     protected void SendAll(byte[] stream, CallbackSend? callbackSend = null,
-                           CallbackSendShard? callbackSendShard = null, IContextOperation? contextOperation = null)
+                           CallbackSendShard? callbackSendShard = null, IContext? contextOperation = null)
     {
         if (!Connected)
         {
@@ -84,7 +84,7 @@ namespace Networking.TCP.Client
 
             if (contextOperation != null)
             {
-                contextOperation.State = IContextOperation.OperationState.END;
+                contextOperation.State = IContext.OperationState.END;
                 contextOperation.Percentage = 0f;
                 Notify(contextOperation);
             }
@@ -94,7 +94,7 @@ namespace Networking.TCP.Client
 
         if (contextOperation != null)
         {
-            contextOperation.State = IContextOperation.OperationState.BEGIN;
+            contextOperation.State = IContext.OperationState.BEGIN;
             contextOperation.Percentage = 0f;
             Notify(contextOperation);
         }
@@ -112,7 +112,7 @@ namespace Networking.TCP.Client
 
     protected void ReceiveAll(byte[] stream, CallbackReceive? callbackReceive = null,
                               CallbackReceiveShard? callbackReceiveShard = null,
-                              IContextOperation? contextOperation = null)
+                              IContext? contextOperation = null)
     {
         if (!Connected)
         {
@@ -121,7 +121,7 @@ namespace Networking.TCP.Client
 
             if (contextOperation != null)
             {
-                contextOperation.State = IContextOperation.OperationState.END;
+                contextOperation.State = IContext.OperationState.END;
                 contextOperation.Percentage = 0f;
                 Notify(contextOperation);
             }
@@ -131,7 +131,7 @@ namespace Networking.TCP.Client
 
         if (contextOperation != null)
         {
-            contextOperation.State = IContextOperation.OperationState.BEGIN;
+            contextOperation.State = IContext.OperationState.BEGIN;
             contextOperation.Percentage = 0f;
             Notify(contextOperation);
         }
@@ -179,7 +179,7 @@ namespace Networking.TCP.Client
 
                 if (userTokenSend?.ContextOperation != null)
                 {
-                    userTokenSend.ContextOperation.State = IContextOperation.OperationState.END;
+                    userTokenSend.ContextOperation.State = IContext.OperationState.END;
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                     userTokenSend.ContextOperation.SetPercentage(bytesTransferredTotal, args.Buffer.Length);
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
@@ -194,7 +194,7 @@ namespace Networking.TCP.Client
 
                 if (userTokenReceive?.ContextOperation != null)
                 {
-                    userTokenReceive.ContextOperation.State = IContextOperation.OperationState.END;
+                    userTokenReceive.ContextOperation.State = IContext.OperationState.END;
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                     userTokenReceive.ContextOperation.SetPercentage(bytesTransferredTotal, args.Buffer.Length);
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
@@ -223,7 +223,7 @@ namespace Networking.TCP.Client
 
             if (userTokenSend?.ContextOperation != null)
             {
-                userTokenSend.ContextOperation.State = IContextOperation.OperationState.PROGRESS;
+                userTokenSend.ContextOperation.State = IContext.OperationState.PROGRESS;
                 userTokenSend.ContextOperation.SetPercentage(bytesTransferredTotal, args.Buffer.Length);
                 Notify(userTokenSend.ContextOperation);
             }
@@ -240,7 +240,7 @@ namespace Networking.TCP.Client
 
             if (userTokenReceive?.ContextOperation != null)
             {
-                userTokenReceive.ContextOperation.State = IContextOperation.OperationState.PROGRESS;
+                userTokenReceive.ContextOperation.State = IContext.OperationState.PROGRESS;
                 userTokenReceive.ContextOperation.SetPercentage(bytesTransferredTotal, args.Buffer.Length);
                 Notify(userTokenReceive.ContextOperation);
             }

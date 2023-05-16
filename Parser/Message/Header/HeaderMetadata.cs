@@ -1,5 +1,4 @@
-﻿using Parser.Message.Packet;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace Parser.Message.Header
 {

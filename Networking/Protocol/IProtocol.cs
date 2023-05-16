@@ -1,9 +1,18 @@
 ﻿using Parser.Message;
 
+using Networking.Context;
+
 namespace Networking.Protocol
 {
-    public interface IProtocol
+public abstract class IProtocol
+{
+    public IContext Context { get; set; }
+
+    public IProtocol(IContext context)
     {
-        public Message Exchange(Message message);
+        Context = context;
     }
+
+    public abstract Message Exchange(Message message);
+}
 }

@@ -9,7 +9,7 @@ namespace Networking.Context
 {
 public class IContext
 {
-    // the type of the context operation is the same as the message type
+    // the type of the context is the same as the message type
     public Message.Type Type { get; set; } = Message.Type.UNKNOWN;
     // the guid of the message or a new GUID
     public Guid GUID { get; set; } = Guid.NewGuid();

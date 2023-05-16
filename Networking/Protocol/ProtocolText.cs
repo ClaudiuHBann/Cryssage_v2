@@ -1,18 +1,16 @@
-﻿using Networking.Context;
-using Parser.Message;
+﻿using Parser.Message;
+
+using Networking.Context;
 
 namespace Networking.Protocol
 {
-    public class ProtocolText : IProtocol
+public class ProtocolText : IProtocol
 {
-    public ContextText ContextOperation { get; set; }
-
-    public ProtocolText(ContextText contextOperation)
+    public ProtocolText(IContext context) : base(context)
     {
-        ContextOperation = contextOperation;
     }
 
-    public Message Exchange(Message message)
+    public override Message Exchange(Message message)
     {
         throw new NotImplementedException();
     }

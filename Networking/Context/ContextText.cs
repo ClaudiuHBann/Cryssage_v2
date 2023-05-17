@@ -1,17 +1,16 @@
 ﻿using Parser.Message;
 
-using Networking.TCP.Client;
-
 namespace Networking.Context
 {
-    public class ContextText : IContext
-    {
-        public string Text { get; set; }
+public class ContextText : IContext
+{
+    public string Text { get; set; } = "";
+    public uint Timestamp { get; set; } = 0;
 
-        public ContextText(TCPClient client, string text, Guid? guid = null)
-            : base(Message.Type.TEXT, client, guid)
-        {
-            Text = text;
-        }
+    public ContextText(string text, uint timestamp, Guid guid) : base(Message.Type.TEXT, guid)
+    {
+        Text = text;
+        Timestamp = timestamp;
     }
+}
 }

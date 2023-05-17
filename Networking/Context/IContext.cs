@@ -1,9 +1,7 @@
 ﻿using Parser.Message;
+using Newtonsoft.Json;
 
-using System.Net;
-using Networking.TCP.Client;
-
-using System.Security.Cryptography;
+using Networking.Context.File;
 
 namespace Networking.Context
 {
@@ -11,35 +9,51 @@ public class IContext
 {
     // the type of the context is the same as the message type
     public Message.Type Type { get; set; } = Message.Type.UNKNOWN;
-    // the guid of the message or a new GUID
-    public Guid GUID { get; set; } = Guid.NewGuid();
-    // GUID of the client created from it's IP
-    public Guid GUIDChat { get; set; }
+    // the guid of the message
+    public Guid GUID { get; set; } = Guid.Empty;
 
-    public IContext(Message.Type type, TCPClient client, Guid? guid = null)
+    public IContext(Message.Type type, Guid guid)
     {
         Type = type;
-
-        if (client.GetEndpointRemote() is IPEndPoint endpointRemoteIP)
-        {
-            GUIDChat = ToGUID(endpointRemoteIP.Address.ToString());
-        }
-        else
-        {
-            GUIDChat = ToGUID("0.0.0.0");
-        }
-
-        if (guid != null)
-        {
-            GUID = (Guid)guid;
-        }
+        GUID = guid;
     }
 
-    static Guid ToGUID(string data)
+    public static IContext? CreateContext(Message.Type type, Guid guid, byte[] stream)
     {
-        var dataBytes = Utility.ENCODING_DEFAULT.GetBytes(data);
-        var guidBytes = SHA256.HashData(dataBytes);
-        return new Guid(guidBytes);
+        switch (type)
+        {
+        case Message.Type.DISCOVER:
+            return JsonConvert.DeserializeObject<ContextDiscover>(Utility.ENCODING_DEFAULT.GetString(stream));
+        case Message.Type.TEXT:
+            return JsonConvert.DeserializeObject<ContextText>(Utility.ENCODING_DEFAULT.GetString(stream));
+        case Message.Type.FILE_INFO:
+            return JsonConvert.DeserializeObject<ContextFileInfo>(Utility.ENCODING_DEFAULT.GetString(stream));
+        case Message.Type.FILE_REQUEST:
+            return JsonConvert.DeserializeObject<ContextFileRequest>(Utility.ENCODING_DEFAULT.GetString(stream));
+        case Message.Type.FILE_DATA:
+            return new ContextFileData(stream, guid);
+        }
+
+        return null;
+    }
+
+    public byte[] ToStream()
+    {
+        switch (Type)
+        {
+        case Message.Type.DISCOVER:
+            return Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject((ContextDiscover)this));
+        case Message.Type.TEXT:
+            return Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject((ContextText)this));
+        case Message.Type.FILE_INFO:
+            return Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject((ContextFileInfo)this));
+        case Message.Type.FILE_REQUEST:
+            return Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject((ContextFileRequest)this));
+        case Message.Type.FILE_DATA:
+            return ((ContextFileData)this).Stream;
+        }
+
+        return Array.Empty<byte>();
     }
 }
 }

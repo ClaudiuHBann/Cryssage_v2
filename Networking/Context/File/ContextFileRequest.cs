@@ -1,13 +1,10 @@
 ﻿using Parser.Message;
 
-using Networking.TCP.Client;
-
 namespace Networking.Context.File
 {
-public class ContextFileRequest : IContextFile
+public class ContextFileRequest : IContext
 {
-    public ContextFileRequest(TCPClient client, string path, Guid? guid = null)
-        : base(Message.Type.FILE_REQUEST, client, path, guid)
+    public ContextFileRequest(Guid guid) : base(Message.Type.FILE_REQUEST, guid)
     {
     }
 }

@@ -1,21 +1,20 @@
 ﻿using Parser.Message;
 
-using Networking.TCP.Client;
-
 namespace Networking.Context.File
 {
-public class ContextFileInfo : IContextFile
+public class ContextFileInfo : IContext
 {
     // file name with extension
-    public string Name { get; set; }
+    public string Name { get; set; } = "";
     // file size in bytes
-    public uint Size { get; set; }
+    public uint Size { get; set; } = 0;
+    public uint Timestamp { get; set; } = 0;
 
-    public ContextFileInfo(TCPClient client, string path, uint size, Guid? guid = null)
-        : base(Message.Type.FILE_INFO, client, path, guid)
+    public ContextFileInfo(string name, uint size, uint timestamp, Guid guid) : base(Message.Type.FILE_INFO, guid)
     {
-        Name = System.IO.Path.GetFileName(path);
+        Name = name;
         Size = size;
+        Timestamp = timestamp;
     }
 }
 }

@@ -1,17 +1,14 @@
 ﻿using Parser.Message;
 
-using Networking.TCP.Client;
-
 namespace Networking.Context.File
 {
-public class ContextFileData : IContextFile
+public class ContextFileData : IContext
 {
-    public byte[] Data { get; set; }
+    public byte[] Stream { get; set; }
 
-    public ContextFileData(TCPClient client, string path, byte[] data, Guid? guid = null)
-        : base(Message.Type.FILE_DATA, client, path, guid)
+    public ContextFileData(byte[] stream, Guid guid) : base(Message.Type.FILE_DATA, guid)
     {
-        Data = data;
+        Stream = stream;
     }
 }
 }

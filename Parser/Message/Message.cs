@@ -7,6 +7,8 @@ public class Message
     public enum Type : byte
     {
         UNKNOWN,      // unknown message
+        ERROR,        // error message
+        ACK,          // ack message sent when received message was valid
         DISCOVER,     // discover clients message
         TEXT,         // text message
         FILE_INFO,    // file info message

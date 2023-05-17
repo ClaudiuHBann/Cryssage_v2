@@ -5,20 +5,23 @@ using Networking.Context.File;
 
 namespace Networking.Context
 {
-public class IContext
+// Base class for every receive context and that class used for sending context
+public class IContext : IProgress
 {
     // the type of the context is the same as the message type
     public Message.Type Type { get; set; } = Message.Type.UNKNOWN;
     // the guid of the message
     public Guid GUID { get; set; } = Guid.Empty;
 
-    public IContext(Message.Type type, Guid guid)
+    // Use implicitly by derived classes
+    protected IContext(Message.Type type, Guid guid)
     {
         Type = type;
         GUID = guid;
     }
 
-    public static IContext? CreateContext(Message.Type type, Guid guid, byte[] stream)
+    // used for real data
+    public static IContext? Create(Message.Type type, Guid guid, byte[] stream)
     {
         switch (type)
         {
@@ -35,6 +38,12 @@ public class IContext
         }
 
         return null;
+    }
+
+    // Used for progress
+    public static IContext Create(Message.Type type, Guid guid, uint total)
+    {
+        return new IContext(type, guid) { Total = total };
     }
 
     public byte[] ToStream()

@@ -1,18 +1,15 @@
-﻿using System.Net;
-using System.Net.Sockets;
-using Networking.Context;
-using Parser;
+﻿using Parser;
 using Parser.Message;
 using Parser.Message.Header;
 
+using System.Net.Sockets;
+
+using Networking.Context;
+
 namespace Networking.TCP.Client
 {
-    using CallbackSend = Action<SocketError, uint>;
-    using CallbackSendShard = Action<SocketError, uint>;
-    using CallbackReceive = Action<SocketError, MessageDisassembled?>;
-    using CallbackReceiveShard = Action<SocketError, uint>;
-
-    public class TCPClient : TCPClientRaw
+// TCPClientRaw that sends/receives messages
+public class TCPClient : TCPClientRaw
 {
     public TCPClient() : base()
     {
@@ -22,56 +19,102 @@ namespace Networking.TCP.Client
     {
     }
 
-    public EndPoint? GetEndpointRemote()
+    void SendCallback(IContext contextProgress, AsyncEventArgs args)
     {
-        return Client.RemoteEndPoint;
+        if (args.Error != SocketError.Success || args.Type != AsyncEventArgs.Type_.PROGRESS)
+        {
+            return;
+        }
+
+        contextProgress.SetPercentage(args.BytesTransferredTotal);
+        Notify(contextProgress);
     }
 
-    public void Send(byte[] stream, Message.Type type, CallbackSend? callbackSend = null,
-                     CallbackSendShard? callbackSendShard = null, IContext? contextOperation = null)
+    public void Send(IContext context)
     {
-        var message = MessageManager.ToMessage(stream, type);
+        var contextAsBytes = context.ToStream();
+
+        // create the message that will be sent
+        var message = MessageManager.ToMessage(contextAsBytes, context.Type, context.GUID);
         var messageBytes = MessageConverter.MessageToBytes(message);
 
-        SendAll(messageBytes, callbackSend, callbackSendShard, contextOperation);
+        // create the context progress
+        // TODO: watchout, the total bytes are the underlying message size
+        var contextProgress = IContext.Create(context.Type, context.GUID, (uint)messageBytes.Length);
+
+        SendAll(messageBytes, (args) => SendCallback(contextProgress, args));
     }
 
-    public void Receive(CallbackReceive callbackReceive, CallbackReceiveShard? callbackReceiveShard = null,
-                        IContext? contextOperation = null)
+    static MessageDisassembled CreateMessageDisassembledFromMetadataAndData(byte[] metadataAsBytes, byte[] dataAsBytes)
     {
-        byte[] metadataBytes = new byte[HeaderMetadata.SIZE];
-        ReceiveAll(metadataBytes,
-                   (error, bytesMetadata) =>
+        var bytes = new byte[metadataAsBytes.Length + dataAsBytes.Length];
+        metadataAsBytes.CopyTo(bytes, 0);
+        dataAsBytes.CopyTo(bytes, metadataAsBytes.Length);
+
+        var message = MessageConverter.BytesToMessage(bytes);
+        return MessageManager.FromMessage(message);
+    }
+
+    // when the operation is done the context is the data context else the context is the progress one
+    void ReceiveCallback(IContext context, AsyncEventArgs args)
+    {
+        if (args.Type != AsyncEventArgs.Type_.PROGRESS || args.Type != AsyncEventArgs.Type_.RECEIVE)
+        {
+            return;
+        }
+
+        context.SetPercentage(args.BytesTransferredTotal);
+        Notify(context);
+    }
+
+    void ReceiveShardCallback(IContext contextProgress, byte[] metadataAsBytes, AsyncEventArgs argsData)
+    {
+        // error or no data for data context when operation finished
+        if (argsData.Error != SocketError.Success || (argsData.Done && argsData.Stream == null))
+        {
+            return;
+        }
+
+        // operation is done, create the data context else send progress context
+        if (argsData.Done && argsData.Stream != null)
+        {
+            var messageDisassembled = CreateMessageDisassembledFromMetadataAndData(metadataAsBytes, argsData.Stream);
+            if (messageDisassembled.Stream == null)
+            {
+                return;
+            }
+
+            var context =
+                IContext.Create(messageDisassembled.Type, messageDisassembled.GUID, messageDisassembled.Stream);
+            if (context == null)
+            {
+                return;
+            }
+
+            ReceiveCallback(context, argsData);
+        }
+        else
+        {
+            ReceiveCallback(contextProgress, argsData);
+        }
+    }
+
+    public void Receive()
+    {
+        ReceiveAll(new byte[HeaderMetadata.SIZE],
+                   (argsMetadata) =>
                    {
-                       if (error != SocketError.Success || bytesMetadata == null)
+                       if (argsMetadata.Error != SocketError.Success || argsMetadata.Stream == null)
                        {
-                           callbackReceive(error, null);
                            return;
                        }
 
-                       var packetMetadata = MessageConverter.BytesToPacketMetadata(bytesMetadata);
-                       var data = new byte[packetMetadata.Header.Size];
-                       ReceiveAll(data,
-                                  (error, bytesData) =>
-                                  {
-                                      if (error != SocketError.Success || bytesData == null)
-                                      {
-                                          callbackReceive(error, null);
-                                          return;
-                                      }
-
-                                      var bytes = new byte[bytesMetadata.Length + bytesData.Length];
-                                      bytesMetadata.CopyTo(bytes, 0);
-                                      bytesData.CopyTo(bytes, bytesMetadata.Length);
-
-                                      var message = MessageConverter.BytesToMessage(bytes);
-                                      var messageDisassembled = MessageManager.FromMessage(message);
-
-                                      callbackReceive(error, messageDisassembled);
-                                  },
-                                  callbackReceiveShard, contextOperation);
-                   },
-                   callbackReceiveShard, contextOperation);
+                       var metadata = MessageConverter.BytesToHeaderMetadata(argsMetadata.Stream);
+                       // TODO: watchout, the total bytes are the underlying message size
+                       var contextProgress = IContext.Create(metadata.Type, metadata.GUID, metadata.Size);
+                       ReceiveAll(new byte[metadata.Size],
+                                  (argsData) => ReceiveShardCallback(contextProgress, argsMetadata.Stream, argsData));
+                   });
     }
 }
 }

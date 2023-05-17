@@ -1,50 +1,14 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using Networking.Context;
 
 namespace Networking.TCP.Client
 {
-    using CallbackConnect = Action<SocketError, bool>;
-    using CallbackSend = Action<SocketError, uint>;
-    using CallbackSendShard = Action<SocketError, uint>;
-    using CallbackReceive = Action<SocketError, byte[]?>;
-    using CallbackReceiveShard = Action<SocketError, uint>;
-    using CallbackDisconnect = Action<SocketError>;
+using Callback = Action<AsyncEventArgs>;
 
-    public class TCPClientRaw : ISubscriber
+// Async TCP client that (dis)connects and sends/receives a stream of bytes
+public class TCPClientRaw : ISubscriber
 {
-    class SAEAUserTokenSend
-    {
-        public CallbackSend? CallbackSend { get; set; } = null;
-        public CallbackSendShard? CallbackSendShard { get; set; } = null;
-        public IContext? ContextOperation { get; set; } = null;
-
-        public SAEAUserTokenSend(CallbackSend? callbackSend = null, CallbackSendShard? callbackSendShard = null,
-                                 IContext? contextOperation = null)
-        {
-            CallbackSend = callbackSend;
-            CallbackSendShard = callbackSendShard;
-            ContextOperation = contextOperation;
-        }
-    }
-
-    class SAEAUserTokenReceive
-    {
-        public CallbackReceive? CallbackReceive { get; set; } = null;
-        public CallbackReceiveShard? CallbackReceiveShard { get; set; } = null;
-        public IContext? ContextOperation { get; set; } = null;
-
-        public SAEAUserTokenReceive(CallbackReceive? callbackReceive = null,
-                                    CallbackReceiveShard? callbackReceiveShard = null,
-                                    IContext? contextOperation = null)
-        {
-            CallbackReceive = callbackReceive;
-            CallbackReceiveShard = callbackReceiveShard;
-            ContextOperation = contextOperation;
-        }
-    }
-
-    protected Socket Client { get; }
+    readonly Socket Client;
     bool Connected = false;
 
     protected TCPClientRaw()
@@ -58,49 +22,31 @@ namespace Networking.TCP.Client
         Connected = true;
     }
 
-    public void Connect(string ip, ushort port, CallbackConnect? callback = null)
+    public void Connect(string ip, ushort port, Callback callback)
     {
         SocketAsyncEventArgs args = new() { RemoteEndPoint = new IPEndPoint(IPAddress.Parse(ip), port) };
         args.Completed += (sender, args) =>
         {
             Connected = args.SocketError == SocketError.Success;
-            callback?.Invoke(args.SocketError, Connected);
+            callback(new AsyncEventArgs(args.SocketError, Connected));
         };
 
         if (!Client.ConnectAsync(args))
         {
             Connected = args.SocketError == SocketError.Success;
-            callback?.Invoke(args.SocketError, Connected);
+            callback(new AsyncEventArgs(args.SocketError, Connected));
         }
     }
 
-    protected void SendAll(byte[] stream, CallbackSend? callbackSend = null,
-                           CallbackSendShard? callbackSendShard = null, IContext? contextOperation = null)
+    protected void SendAll(byte[] stream, Callback? callback = null)
     {
         if (!Connected)
         {
-            callbackSend?.Invoke(SocketError.NotConnected, 0);
-            callbackSendShard?.Invoke(SocketError.NotConnected, 0);
-
-            if (contextOperation != null)
-            {
-                contextOperation.State = IContext.OperationState.END;
-                contextOperation.Percentage = 0f;
-                Notify(contextOperation);
-            }
-
+            callback?.Invoke(new AsyncEventArgs(SocketError.NotConnected, 0));
             return;
         }
 
-        if (contextOperation != null)
-        {
-            contextOperation.State = IContext.OperationState.BEGIN;
-            contextOperation.Percentage = 0f;
-            Notify(contextOperation);
-        }
-
-        SocketAsyncEventArgs args =
-            new() { UserToken = new SAEAUserTokenSend(callbackSend, callbackSendShard, contextOperation) };
+        SocketAsyncEventArgs args = new() { UserToken = callback };
         args.SetBuffer(stream, 0, stream.Length);
         args.Completed += OnSendReceiveShard;
 
@@ -110,34 +56,15 @@ namespace Networking.TCP.Client
         }
     }
 
-    protected void ReceiveAll(byte[] stream, CallbackReceive? callbackReceive = null,
-                              CallbackReceiveShard? callbackReceiveShard = null,
-                              IContext? contextOperation = null)
+    protected void ReceiveAll(byte[] stream, Callback callback)
     {
         if (!Connected)
         {
-            callbackReceive?.Invoke(SocketError.NotConnected, null);
-            callbackReceiveShard?.Invoke(SocketError.NotConnected, 0);
-
-            if (contextOperation != null)
-            {
-                contextOperation.State = IContext.OperationState.END;
-                contextOperation.Percentage = 0f;
-                Notify(contextOperation);
-            }
-
+            callback(new AsyncEventArgs(SocketError.NotConnected, 0));
             return;
         }
 
-        if (contextOperation != null)
-        {
-            contextOperation.State = IContext.OperationState.BEGIN;
-            contextOperation.Percentage = 0f;
-            Notify(contextOperation);
-        }
-
-        SocketAsyncEventArgs args =
-            new() { UserToken = new SAEAUserTokenReceive(callbackReceive, callbackReceiveShard, contextOperation) };
+        SocketAsyncEventArgs args = new() { UserToken = callback };
         args.SetBuffer(stream, 0, stream.Length);
         args.Completed += OnSendReceiveShard;
 
@@ -147,23 +74,28 @@ namespace Networking.TCP.Client
         }
     }
 
-    public void Disconnect(CallbackDisconnect? callback = null)
+    public void Disconnect(Callback? callback = null)
     {
         if (!Connected)
         {
-            callback?.Invoke(SocketError.NotConnected);
+            callback?.Invoke(new AsyncEventArgs(SocketError.NotConnected));
             return;
         }
 
         SocketAsyncEventArgs args = new();
         if (callback != null)
         {
-            args.Completed += (sender, args) => callback(args.SocketError);
+            args.Completed += (sender, args) =>
+            {
+                callback(new AsyncEventArgs(args.SocketError));
+                Connected = false;
+            };
         }
 
         if (!Client.DisconnectAsync(args))
         {
-            callback?.Invoke(args.SocketError);
+            callback?.Invoke(new AsyncEventArgs(args.SocketError));
+            Connected = false;
         }
     }
 
@@ -174,32 +106,13 @@ namespace Networking.TCP.Client
         {
             if (args.LastOperation == SocketAsyncOperation.Send)
             {
-                var userTokenSend = (SAEAUserTokenSend?)args.UserToken;
-                userTokenSend?.CallbackSend?.Invoke(args.SocketError, bytesTransferredTotal);
-
-                if (userTokenSend?.ContextOperation != null)
-                {
-                    userTokenSend.ContextOperation.State = IContext.OperationState.END;
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-                    userTokenSend.ContextOperation.SetPercentage(bytesTransferredTotal, args.Buffer.Length);
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-                    Notify(userTokenSend.ContextOperation);
-                }
+                ((Callback?)args.UserToken)?.Invoke(new AsyncEventArgs(args.SocketError, bytesTransferredTotal, true));
             }
             else
             {
-                var userTokenReceive = (SAEAUserTokenReceive?)args.UserToken;
+                // TODO: why on fail we give back the buffer
                 args.SetBuffer(args.Buffer, 0, (int)bytesTransferredTotal);
-                userTokenReceive?.CallbackReceive?.Invoke(args.SocketError, args.Buffer);
-
-                if (userTokenReceive?.ContextOperation != null)
-                {
-                    userTokenReceive.ContextOperation.State = IContext.OperationState.END;
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-                    userTokenReceive.ContextOperation.SetPercentage(bytesTransferredTotal, args.Buffer.Length);
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-                    Notify(userTokenReceive.ContextOperation);
-                }
+                ((Callback?)args.UserToken)?.Invoke(new AsyncEventArgs(args.SocketError, args.Buffer, true));
             }
 
             return;
@@ -218,15 +131,7 @@ namespace Networking.TCP.Client
 
         if (args.LastOperation == SocketAsyncOperation.Send)
         {
-            var userTokenSend = (SAEAUserTokenSend?)args.UserToken;
-            userTokenSend?.CallbackSendShard?.Invoke(args.SocketError, bytesTransferredTotal);
-
-            if (userTokenSend?.ContextOperation != null)
-            {
-                userTokenSend.ContextOperation.State = IContext.OperationState.PROGRESS;
-                userTokenSend.ContextOperation.SetPercentage(bytesTransferredTotal, args.Buffer.Length);
-                Notify(userTokenSend.ContextOperation);
-            }
+            ((Callback?)args.UserToken)?.Invoke(new AsyncEventArgs(args.SocketError, bytesTransferredTotal));
 
             if (!Client.SendAsync(args))
             {
@@ -235,15 +140,7 @@ namespace Networking.TCP.Client
         }
         else
         {
-            var userTokenReceive = (SAEAUserTokenReceive?)args.UserToken;
-            userTokenReceive?.CallbackReceiveShard?.Invoke(args.SocketError, (uint)args.BytesTransferred);
-
-            if (userTokenReceive?.ContextOperation != null)
-            {
-                userTokenReceive.ContextOperation.State = IContext.OperationState.PROGRESS;
-                userTokenReceive.ContextOperation.SetPercentage(bytesTransferredTotal, args.Buffer.Length);
-                Notify(userTokenReceive.ContextOperation);
-            }
+            ((Callback?)args.UserToken)?.Invoke(new AsyncEventArgs(args.SocketError, bytesTransferredTotal));
 
             if (!Client.ReceiveAsync(args))
             {

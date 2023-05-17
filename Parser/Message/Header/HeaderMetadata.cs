@@ -8,6 +8,7 @@ public class HeaderMetadata
 
     public Guid GUID { get; } = Guid.Empty;
     public Message.Type Type { get; } = Message.Type.UNKNOWN;
+    // Size of the packets of data of the message
     public uint Size { get; } = 0;
 
     public HeaderMetadata(Guid guid, Message.Type type, uint size)

@@ -1,14 +1,14 @@
-﻿using Parser.Message;
+﻿using Parser;
+using Parser.Message;
 
 using Networking.Context;
-using Networking.Context.File;
 using Networking.Protocol.File;
 
 namespace Networking.Protocol
 {
 public class Dispatcher
 {
-    public static Message? Dispatch(Message message, IContext context)
+    public static Message Dispatch(Message message, IContext context)
     {
         IProtocol? protocol = null;
         switch (message.PacketMetadata.Header.Type)
@@ -20,17 +20,18 @@ public class Dispatcher
             protocol = new ProtocolText(context);
             break;
         case Message.Type.FILE_INFO:
-            protocol = new ProtocolFileInfo((IContextFile)context);
+            protocol = new ProtocolFileInfo(context);
             break;
         case Message.Type.FILE_REQUEST:
-            protocol = new ProtocolFileRequest((IContextFile)context);
+            protocol = new ProtocolFileRequest(context);
             break;
         case Message.Type.FILE_DATA:
-            protocol = new ProtocolFileData((IContextFile)context);
+            protocol = new ProtocolFileData(context);
             break;
         }
 
-        return protocol?.Exchange(message);
+        return protocol != null ? protocol.Exchange(message)
+                                : MessageManager.ToMessage(Array.Empty<byte>(), Message.Type.ERROR);
     }
 }
 }

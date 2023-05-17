@@ -1,16 +1,16 @@
 ﻿using Parser.Message;
 
-using Networking.Context.File;
+using Networking.Context;
 
 namespace Networking.Protocol.File
 {
-public class ProtocolFileRequest : IProtocolFile
+public class ProtocolFileRequest : IProtocol
 {
-    public ProtocolFileRequest(IContextFile context) : base(context)
+    public ProtocolFileRequest(IContext context) : base(context)
     {
     }
 
-    public override Message ExchangeFile(Message message)
+    public override Message Exchange(Message message)
     {
         throw new NotImplementedException();
     }

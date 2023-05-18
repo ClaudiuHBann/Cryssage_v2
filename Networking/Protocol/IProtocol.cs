@@ -6,13 +6,13 @@ namespace Networking.Protocol
 {
 public abstract class IProtocol
 {
-    public IContext Context { get; set; }
+    public IContextHandler ContextHandler { get; set; }
 
-    public IProtocol(IContext context)
+    public IProtocol(IContextHandler contextHandler)
     {
-        Context = context;
+        ContextHandler = contextHandler;
     }
 
-    public abstract Message Exchange(Message message);
+    public abstract Message Exchange(IContext context);
 }
 }

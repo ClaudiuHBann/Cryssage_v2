@@ -1,10 +1,17 @@
-﻿namespace Networking.Context
+﻿using Parser.Message;
+
+namespace Networking.Context
 {
-public class IProgress
+public class ContextProgress : IContext
 {
     public uint Current { get; set; } = 0;
     public uint Total { get; set; } = 0;
     public float Percentage { get; set; } = 0f;
+
+    public ContextProgress(uint total, Guid guid) : base(Message.Type.PROGRESS, guid)
+    {
+        Total = total;
+    }
 
     public float SetPercentage(uint current)
     {
@@ -13,7 +20,5 @@ public class IProgress
 
         return Percentage;
     }
-
-    public bool IsContextProgress() => Current != 0 || Total != 0 || Percentage != 0f;
 }
 }

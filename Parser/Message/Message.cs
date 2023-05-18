@@ -14,7 +14,12 @@ public class Message
         FILE_INFO,    // file info message
         FILE_REQUEST, // file request to download message
         FILE_DATA,    // file data from the file request message
-        COUNT         // used to get the size of the enum
+
+        // not a message type but a context type
+        // exists here to make things nicer and easier
+        PROGRESS,
+
+        COUNT // used to get the size of the enum
     }
 
     public PacketMetadata PacketMetadata { get; }

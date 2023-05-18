@@ -6,7 +6,7 @@ using Networking.Context.File;
 namespace Networking.Context
 {
 // Base class for every receive context and that class used for sending context
-public class IContext : IProgress
+public class IContext
 {
     // the type of the context is the same as the message type
     public Message.Type Type { get; set; } = Message.Type.UNKNOWN;
@@ -40,11 +40,8 @@ public class IContext : IProgress
         return null;
     }
 
-    // Used for progress
-    public static IContext Create(Message.Type type, Guid guid, uint total)
-    {
-        return new IContext(type, guid) { Total = total };
-    }
+    // Used for progress context
+    public static ContextProgress Create(Message.Type type, Guid guid, uint total) => new ContextProgress(total, guid);
 
     public byte[] ToStream()
     {

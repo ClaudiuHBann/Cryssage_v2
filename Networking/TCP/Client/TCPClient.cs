@@ -19,15 +19,15 @@ public class TCPClient : TCPClientRaw
     {
     }
 
-    void SendCallback(IContext contextProgress, AsyncEventArgs args)
+    void SendCallback(ContextProgress context, AsyncEventArgs args)
     {
         if (args.Error != SocketError.Success || args.Type != AsyncEventArgs.Type_.PROGRESS)
         {
             return;
         }
 
-        contextProgress.SetPercentage(args.BytesTransferredTotal);
-        Notify(contextProgress);
+        context.SetPercentage(args.BytesTransferredTotal);
+        Notify(context);
     }
 
     public void Send(IContext context)
@@ -63,11 +63,15 @@ public class TCPClient : TCPClientRaw
             return;
         }
 
-        context.SetPercentage(args.BytesTransferredTotal);
+        if (context.Type == Message.Type.PROGRESS)
+        {
+            ((ContextProgress)context).SetPercentage(args.BytesTransferredTotal);
+        }
+
         Notify(context);
     }
 
-    void ReceiveShardCallback(IContext contextProgress, byte[] metadataAsBytes, AsyncEventArgs argsData)
+    void ReceiveShardCallback(ContextProgress contextProgress, byte[] metadataAsBytes, AsyncEventArgs argsData)
     {
         // error or no data for data context when operation finished
         if (argsData.Error != SocketError.Success || (argsData.Done && argsData.Stream == null))

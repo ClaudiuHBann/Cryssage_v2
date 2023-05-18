@@ -1,4 +1,5 @@
-﻿using Parser.Message;
+﻿using Parser;
+using Parser.Message;
 
 using Networking.Context;
 
@@ -6,13 +7,14 @@ namespace Networking.Protocol
 {
 public class ProtocolText : IProtocol
 {
-    public ProtocolText(IContext context) : base(context)
+    public ProtocolText(IContextHandler contextHandler) : base(contextHandler)
     {
+        ContextHandler = contextHandler;
     }
 
-    public override Message Exchange(Message message)
+    public override Message Exchange(IContext context)
     {
-        throw new NotImplementedException();
+        return MessageManager.ToMessageAck();
     }
 }
 }

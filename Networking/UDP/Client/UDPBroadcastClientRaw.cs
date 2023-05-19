@@ -12,6 +12,7 @@ public class UDPBroadcastClientRaw
 
     protected UDPBroadcastClientRaw(ushort port)
     {
+        Client.EnableBroadcast = true;
         Client.Client.Bind(new IPEndPoint(IPAddress.Any, port));
         Port = port;
     }

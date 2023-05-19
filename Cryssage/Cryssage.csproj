@@ -33,6 +33,9 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 		<DefaultLanguage>en</DefaultLanguage>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<PackageCertificateThumbprint>17B93E2FA4B578963DBB4F05278C3A9790D0B0D7</PackageCertificateThumbprint>
+		<PackageCertificateKeyFile>Cryssage_TemporaryKey.pfx</PackageCertificateKeyFile>
+		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using Networking.Interfaces;
+using Networking.Interface;
 
 namespace Networking.TCP.Client
 {

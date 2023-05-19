@@ -4,9 +4,10 @@ using Parser.Message;
 using Networking.Context;
 
 using Networking.Protocol.File;
-using Networking.Interfaces;
+using Networking.Interface;
+using Networking.Protocol;
 
-namespace Networking.Protocol
+namespace Networking
 {
 public class Dispatcher
 {

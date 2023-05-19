@@ -1,6 +1,6 @@
 ﻿using Networking.Context;
 
-namespace Networking.Interfaces
+namespace Networking.Interface
 {
 public interface IObserver
 {

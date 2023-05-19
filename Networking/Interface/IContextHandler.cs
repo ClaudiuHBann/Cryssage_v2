@@ -1,7 +1,7 @@
 ﻿using Networking.Context;
 using Networking.Context.File;
 
-namespace Networking.Interfaces
+namespace Networking.Interface
 {
 public interface IContextHandler
 {

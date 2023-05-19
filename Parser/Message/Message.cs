@@ -9,6 +9,7 @@ public class Message
         UNKNOWN,      // unknown message
         ERROR,        // error message
         ACK,          // ack message sent when received message was valid
+        BROADCAST,    // message for broadcast
         DISCOVER,     // discover clients message
         TEXT,         // text message
         FILE_INFO,    // file info message

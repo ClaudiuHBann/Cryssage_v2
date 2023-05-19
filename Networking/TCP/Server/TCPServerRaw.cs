@@ -4,7 +4,7 @@ using Networking.TCP.Client;
 
 namespace Networking.TCP.Server
 {
-using CallbackAccept = Action<SocketError, TCPClient>;
+using CallbackAccept = Action<TCPClient>;
 
 public class TCPServerRaw
 {
@@ -36,7 +36,7 @@ public class TCPServerRaw
         if (args.SocketError == SocketError.Success && args.AcceptSocket != null)
         {
             TCPClient client = new(args.AcceptSocket);
-            ((CallbackAccept?)args.UserToken)?.Invoke(args.SocketError, client);
+            ((CallbackAccept?)args.UserToken)?.Invoke(client);
             args.AcceptSocket = null;
         }
 

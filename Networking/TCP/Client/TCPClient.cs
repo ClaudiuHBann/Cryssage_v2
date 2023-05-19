@@ -11,11 +11,11 @@ namespace Networking.TCP.Client
 // TCPClientRaw that sends/receives messages
 public class TCPClient : TCPClientRaw
 {
-    public TCPClient() : base()
+    public TCPClient() : base(Type_.TCP)
     {
     }
 
-    public TCPClient(Socket socket) : base(socket)
+    public TCPClient(Socket socket) : base(socket, Type_.TCP)
     {
     }
 

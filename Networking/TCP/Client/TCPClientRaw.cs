@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using Networking.Interfaces;
 
 namespace Networking.TCP.Client
 {
@@ -8,17 +9,17 @@ using Callback = Action<AsyncEventArgs>;
 // Async TCP client that (dis)connects and sends/receives a stream of bytes
 public class TCPClientRaw : ISubscriber
 {
-    readonly Socket Client;
+    readonly TcpClient Client;
     bool Connected = false;
 
-    protected TCPClientRaw()
+    protected TCPClientRaw(Type_ type) : base(type)
     {
-        Client = new(SocketType.Stream, ProtocolType.Tcp);
+        Client = new();
     }
 
-    protected TCPClientRaw(Socket client)
+    protected TCPClientRaw(Socket client, Type_ type) : base(type)
     {
-        Client = client;
+        Client = new() { Client = client };
         Connected = true;
     }
 
@@ -31,7 +32,7 @@ public class TCPClientRaw : ISubscriber
             callback(new AsyncEventArgs(args.SocketError, Connected));
         };
 
-        if (!Client.ConnectAsync(args))
+        if (!Client.Client.ConnectAsync(args))
         {
             Connected = args.SocketError == SocketError.Success;
             callback(new AsyncEventArgs(args.SocketError, Connected));
@@ -50,7 +51,7 @@ public class TCPClientRaw : ISubscriber
         args.SetBuffer(stream, 0, stream.Length);
         args.Completed += OnSendReceiveShard;
 
-        if (!Client.SendAsync(args))
+        if (!Client.Client.SendAsync(args))
         {
             OnSendReceiveShard(this, args);
         }
@@ -68,7 +69,7 @@ public class TCPClientRaw : ISubscriber
         args.SetBuffer(stream, 0, stream.Length);
         args.Completed += OnSendReceiveShard;
 
-        if (!Client.ReceiveAsync(args))
+        if (!Client.Client.ReceiveAsync(args))
         {
             OnSendReceiveShard(this, args);
         }
@@ -92,7 +93,7 @@ public class TCPClientRaw : ISubscriber
             };
         }
 
-        if (!Client.DisconnectAsync(args))
+        if (!Client.Client.DisconnectAsync(args))
         {
             callback?.Invoke(new AsyncEventArgs(args.SocketError));
             Connected = false;
@@ -133,7 +134,7 @@ public class TCPClientRaw : ISubscriber
         {
             ((Callback?)args.UserToken)?.Invoke(new AsyncEventArgs(args.SocketError, bytesTransferredTotal));
 
-            if (!Client.SendAsync(args))
+            if (!Client.Client.SendAsync(args))
             {
                 OnSendReceiveShard(this, args);
             }
@@ -142,7 +143,7 @@ public class TCPClientRaw : ISubscriber
         {
             ((Callback?)args.UserToken)?.Invoke(new AsyncEventArgs(args.SocketError, bytesTransferredTotal));
 
-            if (!Client.ReceiveAsync(args))
+            if (!Client.Client.ReceiveAsync(args))
             {
                 OnSendReceiveShard(this, args);
             }

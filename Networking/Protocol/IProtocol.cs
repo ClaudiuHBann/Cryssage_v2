@@ -1,6 +1,7 @@
 ﻿using Parser.Message;
 
 using Networking.Context;
+using Networking.Interfaces;
 
 namespace Networking.Protocol
 {

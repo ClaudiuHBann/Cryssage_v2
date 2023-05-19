@@ -4,6 +4,7 @@ using Parser.Message;
 using Networking.Context;
 
 using Networking.Protocol.File;
+using Networking.Interfaces;
 
 namespace Networking.Protocol
 {

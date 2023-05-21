@@ -8,21 +8,12 @@ using Networking.Context;
 
 namespace Networking.TCP.Client
 {
+using Callback = Action<IContext>;
+using CallbackProgress = Action<ContextProgress>;
+
 // TCPClientRaw that sends/receives messages
 public class TCPClient : TCPClientRaw
 {
-    public delegate void OnSendDelegate(ContextProgress context);
-    public static OnSendDelegate OnSend {
-        get; set;
-    } = new((_) =>
-                {});
-
-    public delegate void OnReceiveDelegate(IContext context);
-    public static OnReceiveDelegate OnReceive {
-        get; set;
-    } = new((_) =>
-                {});
-
     public TCPClient()
     {
     }
@@ -31,7 +22,8 @@ public class TCPClient : TCPClientRaw
     {
     }
 
-    void SendCallback(ContextProgress context, AsyncEventArgs args)
+    static void SendCallback(Callback callback, CallbackProgress callbackProgress, ContextProgress context,
+                             AsyncEventArgs args)
     {
         if (args.Error != SocketError.Success || args.Type != AsyncEventArgs.Type_.PROGRESS)
         {
@@ -39,10 +31,17 @@ public class TCPClient : TCPClientRaw
         }
 
         context.SetPercentage(args.BytesTransferredTotal);
-        OnSend(context);
+        if (context.Done)
+        {
+            callback(context);
+        }
+        else
+        {
+            callbackProgress(context);
+        }
     }
 
-    public void Send(IContext context)
+    public void Send(IContext context, Callback callback, CallbackProgress callbackProgress)
     {
         var contextAsBytes = context.ToStream();
 
@@ -54,7 +53,7 @@ public class TCPClient : TCPClientRaw
         // TODO: watchout, the total bytes are the underlying message size
         var contextProgress = IContext.Create(context.Type, context.GUID, (uint)messageBytes.Length);
 
-        SendAll(messageBytes, (args) => SendCallback(contextProgress, args));
+        SendAll(messageBytes, (args) => SendCallback(callback, callbackProgress, contextProgress, args));
     }
 
     static MessageDisassembled CreateMessageDisassembledFromMetadataAndData(byte[] metadataAsBytes, byte[] dataAsBytes)
@@ -68,7 +67,7 @@ public class TCPClient : TCPClientRaw
     }
 
     // when the operation is done the context is the data context else the context is the progress one
-    void ReceiveCallback(IContext context, AsyncEventArgs args)
+    static void ReceiveCallback(Callback callback, IContext context, AsyncEventArgs args)
     {
         if (args.Type != AsyncEventArgs.Type_.PROGRESS || args.Type != AsyncEventArgs.Type_.RECEIVE)
         {
@@ -80,10 +79,11 @@ public class TCPClient : TCPClientRaw
             ((ContextProgress)context).SetPercentage(args.BytesTransferredTotal);
         }
 
-        OnReceive(context);
+        callback(context);
     }
 
-    void ReceiveShardCallback(ContextProgress contextProgress, byte[] metadataAsBytes, AsyncEventArgs argsData)
+    static void ReceiveCallback(Callback callback, CallbackProgress callbackProgress, ContextProgress contextProgress,
+                                byte[] metadataAsBytes, AsyncEventArgs argsData)
     {
         // error or no data for data context when operation finished
         if (argsData.Error != SocketError.Success || (argsData.Done && argsData.Stream == null))
@@ -107,15 +107,16 @@ public class TCPClient : TCPClientRaw
                 return;
             }
 
-            ReceiveCallback(context, argsData);
+            callback(context);
         }
         else
         {
-            ReceiveCallback(contextProgress, argsData);
+            contextProgress.SetPercentage(argsData.BytesTransferredTotal);
+            callbackProgress(contextProgress);
         }
     }
 
-    public void Receive()
+    public void Receive(Callback callback, CallbackProgress callbackProgress)
     {
         ReceiveAll(new byte[HeaderMetadata.SIZE],
                    (argsMetadata) =>
@@ -129,7 +130,8 @@ public class TCPClient : TCPClientRaw
                        // TODO: watchout, the total bytes are the underlying message size
                        var contextProgress = IContext.Create(metadata.Type, metadata.GUID, metadata.Size);
                        ReceiveAll(new byte[metadata.Size],
-                                  (argsData) => ReceiveShardCallback(contextProgress, argsMetadata.Stream, argsData));
+                                  (argsData) => ReceiveCallback(callback, callbackProgress, contextProgress,
+                                                                argsMetadata.Stream, argsData));
                    });
     }
 }

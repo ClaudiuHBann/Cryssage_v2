@@ -22,6 +22,8 @@ public class TCPClientRaw
         Connected = true;
     }
 
+    public IPEndPoint? EndPointRemote => (IPEndPoint?)Client.Client.RemoteEndPoint;
+
     public void Connect(string ip, ushort port, Callback callback)
     {
         SocketAsyncEventArgs args = new() { RemoteEndPoint = new IPEndPoint(IPAddress.Parse(ip), port) };

@@ -1,6 +1,7 @@
 ﻿using Parser.Message;
 
 using Networking.Context;
+using Networking.Manager;
 
 using Networking.Protocol.File;
 using Networking.Protocol;
@@ -10,10 +11,12 @@ namespace Networking.TCP.Server
 public class ServerDispatcher
 {
     public IContextHandler ContextHandler { get; set; }
+    readonly ManagerTransferFile ManagerTransferFile;
 
-    public ServerDispatcher(IContextHandler contextHandler)
+    public ServerDispatcher(IContextHandler contextHandler, ManagerTransferFile managerTransferFile)
     {
         ContextHandler = contextHandler;
+        ManagerTransferFile = managerTransferFile;
     }
 
     public IContext Dispatch(IContext context)
@@ -28,13 +31,13 @@ public class ServerDispatcher
             protocol = new ProtocolText(ContextHandler);
             break;
         case Message.Type.FILE_INFO:
-            protocol = new ProtocolFileInfo(ContextHandler);
+            protocol = new ProtocolFileInfo(ContextHandler, ManagerTransferFile);
             break;
         case Message.Type.FILE_REQUEST:
-            protocol = new ProtocolFileRequest(ContextHandler);
+            protocol = new ProtocolFileRequest(ContextHandler, ManagerTransferFile);
             break;
         case Message.Type.FILE_DATA:
-            protocol = new ProtocolFileData(ContextHandler);
+            protocol = new ProtocolFileData(ContextHandler, ManagerTransferFile);
             break;
         }
 

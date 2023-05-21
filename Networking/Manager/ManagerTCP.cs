@@ -5,6 +5,7 @@ namespace Networking.Manager
     public class ManagerTCP
 {
     public ManagerConnection ManagerConnection { get; } = new();
+    public ManagerTransferFile ManagerTransferFile { get; } = new();
 
     readonly TCPServerRaw server = new(Utility.PORT_TCP);
     readonly ServerDispatcher dispatcher;
@@ -12,7 +13,7 @@ namespace Networking.Manager
 
     public ManagerTCP(IContextHandler iContextHandler)
     {
-        dispatcher = new(iContextHandler);
+        dispatcher = new(iContextHandler, ManagerTransferFile);
         processor = new(dispatcher);
 
         server.Start(processor.Process);

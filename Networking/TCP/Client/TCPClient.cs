@@ -11,11 +11,23 @@ namespace Networking.TCP.Client
 // TCPClientRaw that sends/receives messages
 public class TCPClient : TCPClientRaw
 {
-    public TCPClient() : base(Type_.TCP)
+    public delegate void OnSendDelegate(ContextProgress context);
+    public static OnSendDelegate OnSend {
+        get; set;
+    } = new((_) =>
+                {});
+
+    public delegate void OnReceiveDelegate(IContext context);
+    public static OnReceiveDelegate OnReceive {
+        get; set;
+    } = new((_) =>
+                {});
+
+    public TCPClient()
     {
     }
 
-    public TCPClient(Socket socket) : base(socket, Type_.TCP)
+    public TCPClient(Socket socket) : base(socket)
     {
     }
 
@@ -27,7 +39,7 @@ public class TCPClient : TCPClientRaw
         }
 
         context.SetPercentage(args.BytesTransferredTotal);
-        Notify(context);
+        OnSend(context);
     }
 
     public void Send(IContext context)
@@ -68,7 +80,7 @@ public class TCPClient : TCPClientRaw
             ((ContextProgress)context).SetPercentage(args.BytesTransferredTotal);
         }
 
-        Notify(context);
+        OnReceive(context);
     }
 
     void ReceiveShardCallback(ContextProgress contextProgress, byte[] metadataAsBytes, AsyncEventArgs argsData)

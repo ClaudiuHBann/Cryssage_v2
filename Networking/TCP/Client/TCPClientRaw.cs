@@ -1,23 +1,22 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using Networking.Interface;
 
 namespace Networking.TCP.Client
 {
 using Callback = Action<AsyncEventArgs>;
 
 // Async TCP client that (dis)connects and sends/receives a stream of bytes
-public class TCPClientRaw : ISubscriber
+public class TCPClientRaw
 {
     readonly TcpClient Client;
     bool Connected = false;
 
-    protected TCPClientRaw(Type_ type) : base(type)
+    protected TCPClientRaw()
     {
         Client = new();
     }
 
-    protected TCPClientRaw(Socket client, Type_ type) : base(type)
+    protected TCPClientRaw(Socket client)
     {
         Client = new() { Client = client };
         Connected = true;

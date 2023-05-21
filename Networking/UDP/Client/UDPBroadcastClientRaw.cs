@@ -30,7 +30,7 @@ public class UDPBroadcastClientRaw
         }
     }
 
-    protected void ReceiveAll(byte[] stream, Callback? callback = null)
+    protected void ReceiveAll(byte[] stream, Callback callback)
     {
         SocketAsyncEventArgs args = new() { UserToken = callback, RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0) };
         args.SetBuffer(stream, 0, stream.Length);

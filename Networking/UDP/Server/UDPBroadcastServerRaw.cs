@@ -8,10 +8,14 @@ using System.Net.NetworkInformation;
 
 namespace Networking.UDP.Server
 {
-using CallbackReceive = Action<EndPoint>;
-
 public class UDPBroadcastServerRaw : UDPBroadcastClientRaw
 {
+    public delegate void OnReceiveDelegate(EndPoint endPoint);
+    public static OnReceiveDelegate OnReceive {
+        get; set;
+    } = new((_) =>
+                {});
+
     public UDPBroadcastServerRaw(ushort port) : base(port)
     {
     }
@@ -28,7 +32,7 @@ public class UDPBroadcastServerRaw : UDPBroadcastClientRaw
             .Any(addressUnicast => addressUnicast.Address == ((IPEndPoint)endPointRemote).Address);
     }
 
-    public void Start(CallbackReceive callback)
+    public void Start()
     {
         // the broadcast message is just a metadata so thats all we need to read
         ReceiveAll(new byte[HeaderMetadata.SIZE],
@@ -42,11 +46,11 @@ public class UDPBroadcastServerRaw : UDPBroadcastClientRaw
                            if (metadata.Type == Message.Type.BROADCAST && args.EndPointRemote != null &&
                                !IsEndPointRemoteMe(args.EndPointRemote))
                            {
-                               callback(args.EndPointRemote);
+                               OnReceive(args.EndPointRemote);
                            }
                        }
 
-                       Start(callback);
+                       Start();
                    });
     }
 }

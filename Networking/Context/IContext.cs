@@ -41,7 +41,13 @@ public class IContext
     }
 
     // Used for progress context
-    public static ContextProgress Create(Message.Type type, Guid guid, uint total) => new ContextProgress(total, guid);
+    public static ContextProgress CreateProgress(Guid guid, uint total) => new(total, guid);
+
+    // Used for error context
+    public static IContext CreateError() => new(Message.Type.ERROR, Guid.NewGuid());
+
+    // Used for ack context
+    public static IContext CreateACK() => new(Message.Type.ACK, Guid.NewGuid());
 
     public byte[] ToStream()
     {
@@ -57,6 +63,9 @@ public class IContext
             return Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject((ContextFileRequest)this));
         case Message.Type.FILE_DATA:
             return ((ContextFileData)this).Stream;
+        case Message.Type.ERROR:
+        case Message.Type.ACK:
+            return Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject(this));
         }
 
         return Array.Empty<byte>();

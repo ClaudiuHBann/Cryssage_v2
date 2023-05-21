@@ -22,7 +22,7 @@ public class TCPClient : TCPClientRaw
     {
     }
 
-    static void SendCallback(Callback callback, CallbackProgress callbackProgress, ContextProgress context,
+    static void SendCallback(Callback callback, CallbackProgress? callbackProgress, ContextProgress context,
                              AsyncEventArgs args)
     {
         if (args.Error != SocketError.Success || args.Type != AsyncEventArgs.Type_.PROGRESS)
@@ -37,11 +37,11 @@ public class TCPClient : TCPClientRaw
         }
         else
         {
-            callbackProgress(context);
+            callbackProgress?.Invoke(context);
         }
     }
 
-    public void Send(IContext context, Callback callback, CallbackProgress callbackProgress)
+    public void Send(IContext context, Callback callback, CallbackProgress? callbackProgress = null)
     {
         var contextAsBytes = context.ToStream();
 
@@ -51,7 +51,7 @@ public class TCPClient : TCPClientRaw
 
         // create the context progress
         // TODO: watchout, the total bytes are the underlying message size
-        var contextProgress = IContext.Create(context.Type, context.GUID, (uint)messageBytes.Length);
+        var contextProgress = IContext.CreateProgress(context.GUID, (uint)messageBytes.Length);
 
         SendAll(messageBytes, (args) => SendCallback(callback, callbackProgress, contextProgress, args));
     }
@@ -128,7 +128,7 @@ public class TCPClient : TCPClientRaw
 
                        var metadata = MessageConverter.BytesToHeaderMetadata(argsMetadata.Stream);
                        // TODO: watchout, the total bytes are the underlying message size
-                       var contextProgress = IContext.Create(metadata.Type, metadata.GUID, metadata.Size);
+                       var contextProgress = IContext.CreateProgress(metadata.GUID, metadata.Size);
                        ReceiveAll(new byte[metadata.Size],
                                   (argsData) => ReceiveCallback(callback, callbackProgress, contextProgress,
                                                                 argsMetadata.Stream, argsData));

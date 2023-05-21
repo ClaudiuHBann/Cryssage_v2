@@ -13,6 +13,6 @@ public abstract class IProtocol
         ContextHandler = contextHandler;
     }
 
-    public abstract Message Exchange(IContext context);
+    public abstract IContext Exchange(IContext context);
 }
 }

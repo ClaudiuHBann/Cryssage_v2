@@ -1,7 +1,4 @@
-﻿using Parser;
-using Parser.Message;
-
-using Networking.Context;
+﻿using Networking.Context;
 
 namespace Networking.Protocol
 {
@@ -12,9 +9,9 @@ public class ProtocolText : IProtocol
         ContextHandler = contextHandler;
     }
 
-    public override Message Exchange(IContext context)
+    public override IContext Exchange(IContext context)
     {
-        return MessageManager.ToMessageAck();
+        return IContext.CreateACK();
     }
 }
 }

@@ -24,8 +24,7 @@ public class UDPBroadcastClient : UDPBroadcastClientRaw
         var messageBytes = MessageConverter.MessageToBytes(message);
 
         // TODO: watchout, the total bytes are the underlying message size
-        var contextProgress = IContext.Create(message.PacketMetadata.Header.Type, message.PacketMetadata.Header.GUID,
-                                              (uint)messageBytes.Length);
+        var contextProgress = IContext.CreateProgress(message.PacketMetadata.Header.GUID, (uint)messageBytes.Length);
 
         BroadcastAll(messageBytes,
                      (args) =>

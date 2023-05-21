@@ -11,16 +11,6 @@ public class MessageManager
         return ToMessage(bytes, type, Guid.NewGuid());
     }
 
-    public static Message.Message ToMessageError()
-    {
-        return ToMessage(Array.Empty<byte>(), Message.Message.Type.ERROR, Guid.NewGuid());
-    }
-
-    public static Message.Message ToMessageAck()
-    {
-        return ToMessage(Array.Empty<byte>(), Message.Message.Type.ACK, Guid.NewGuid());
-    }
-
     public static Message.Message ToMessage(byte[] bytes, Message.Message.Type type, Guid guid)
     {
         List<PacketData> packetDatas = new();

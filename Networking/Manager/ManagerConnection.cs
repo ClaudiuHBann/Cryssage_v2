@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
+using System.Net;
 using Networking.TCP.Client;
 
 namespace Networking.Manager
@@ -8,17 +9,17 @@ public class ManagerConnection
 {
     public ConcurrentDictionary<string, TCPClient> Clients = new();
 
-    public void CreateConnections(List<string> ips) => ips.ForEach(CreateConnection);
+    public void CreateConnections(List<IPEndPoint> ips) => ips.ForEach(CreateConnection);
 
-    public void CreateConnection(string ip)
+    public void CreateConnection(IPEndPoint ipEndPoint)
     {
         TCPClient client = new();
-        client.Connect(ip, Utility.PORT_TCP,
+        client.Connect(ipEndPoint.Address.ToString(), Utility.PORT_TCP,
                        (args) =>
                        {
                            if (args.Connected)
                            {
-                               Clients[ip] = client;
+                               Clients[ipEndPoint.Address.ToString()] = client;
                            }
                        });
     }

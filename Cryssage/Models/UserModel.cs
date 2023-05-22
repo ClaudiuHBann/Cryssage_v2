@@ -7,7 +7,7 @@ namespace Cryssage.Models
 public partial class UserModel : ObservableObject
 {
     [ObservableProperty]
-    string id;
+    string ip;
 
     [ObservableProperty]
     string avatar;
@@ -29,9 +29,9 @@ public partial class UserModel : ObservableObject
         MessageView = new();
     }
 
-    public UserModel(string id, string avatar, string name, DateTime time, string message)
+    public UserModel(string ip, string avatar, string name, DateTime time, string message)
     {
-        Id = id;
+        Ip = ip;
         Avatar = avatar;
         Name = name;
         Time = time;

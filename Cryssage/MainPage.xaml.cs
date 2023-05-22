@@ -13,69 +13,67 @@ using Cryssage.Models;
 using Cryssage.Views;
 using Cryssage.Events;
 
+using Networking;
+using Networking.Context;
+using Networking.Context.File;
+using Networking.Manager;
+
 namespace Cryssage
 {
-public partial class MainPage : ContentPage
+public partial class MainPage : ContentPage, IContextHandler
 {
     UserView viewUser;
 
-    readonly TCPServerRaw server = new(6969);
-    readonly TCPClient client = new();
-
-    readonly EventsNetworking eventsNetworking = new();
+    readonly ManagerNetwork managerNetwork;
     readonly EventsUI eventsUI = new();
+
+    public void OnDiscover(ContextDiscover context)
+    {
+        Console.WriteLine($"OnDiscover({context.Name})");
+
+        if (viewUser.Items.Any(user => user.Ip == context.Ip))
+        {
+            viewUser.Items.First(user => user.Ip == context.Ip).Name = context.Name;
+        }
+        else
+        {
+            var userNew = new UserModel(context.Ip, "dotnet_bot.png", context.Name, DateTime.MinValue, "");
+            viewUser.Items.Add(userNew);
+        }
+    }
+
+    public void OnSendProgress(ContextProgress context)
+    {
+        Console.WriteLine($"OnSendProgress({context.Percentage}, {context.Done})");
+    }
+
+    public void OnReceiveText(ContextText context)
+    {
+        Console.WriteLine($"OnReceiveText({context.Text}, {context.Timestamp})");
+
+        DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+        dateTime = dateTime.AddSeconds(context.Timestamp).ToLocalTime();
+        var message =
+            new MessageTextModel("", MessageType.TEXT, "Enemy", dateTime, MessageState.SEEN, false, context.Text);
+        AddUserMessage(message);
+    }
+
+    public void OnReceiveFileInfo(ContextFileInfo context)
+    {
+        Console.WriteLine($"OnReceiveFileInfo({context.Name}, {context.Size}, {context.Timestamp})");
+    }
+
+    public void OnReceiveProgress(ContextProgress context)
+    {
+        Console.WriteLine($"OnReceiveProgress({context.Percentage}, {context.Done})");
+    }
 
     public MainPage(UserView uv)
     {
+        managerNetwork = new(this);
+
         InitializeUI(uv);
-        InitializeEvents();
-        InitializeNetworking();
-    }
-
-    void InitializeEvents()
-    {
-        InitializeEventsNetworking();
         InitializeEventsUI();
-    }
-
-    void InitializeEventsNetworking()
-    {
-        eventsNetworking.OnMessageReceiveError += (error) =>
-        {
-#pragma warning disable CA1416 // Validate platform compatibility
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"OnMessageReceiveError({error})");
-            Console.ForegroundColor = ConsoleColor.White;
-#pragma warning restore CA1416 // Validate platform compatibility
-        };
-
-        eventsNetworking.OnMessageSendError += (error) =>
-        {
-#pragma warning disable CA1416 // Validate platform compatibility
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"OnMessageSendError({error})");
-            Console.ForegroundColor = ConsoleColor.White;
-#pragma warning restore CA1416 // Validate platform compatibility
-        };
-
-        eventsNetworking.OnMessageSend += (bytesTransferred) => Console.WriteLine($"OnMessageSend({bytesTransferred})");
-
-        eventsNetworking.OnMessageReceive += (messageDisassembled) =>
-        {
-            Console.WriteLine(
-                $"\nId: {messageDisassembled.GUID}, Type: {messageDisassembled.Type}, Data: {messageDisassembled.Stream.Length}");
-
-            if (messageDisassembled.Stream != null)
-            {
-                var messageAsString = Encoding.Unicode.GetString(messageDisassembled.Stream);
-                var userMessage = new MessageTextModel(messageDisassembled.GUID.ToString(), MessageType.TEXT, "You",
-                                                       DateTime.Now, MessageState.SEEN, false, messageAsString);
-
-                eventsUI.OnMessageAdd(userMessage);
-            }
-
-            Console.WriteLine();
-        };
     }
 
     void InitializeEventsUI()
@@ -98,60 +96,7 @@ public partial class MainPage : ContentPage
         InitializeComponent();
 
         viewUser = uv;
-
-        for (int i = 0; i < 3; i++)
-        {
-            var userYou = new UserModel("Id", "dotnet_bot.png", "You", DateTime.MinValue, "");
-            viewUser.Items.Add(userYou);
-        }
-
         collectionViewUsers.ItemsSource = viewUser.Items;
-    }
-
-    void InitializeNetworking()
-    {
-        server.Start((error, client) =>
-                     {
-                         if (error != SocketError.Success)
-                         {
-                             return;
-                         }
-
-                         void CallbackReceive(SocketError error, MessageDisassembled messageDisassembled)
-                         {
-                             if (messageDisassembled != null && messageDisassembled.Stream != null)
-                             {
-                                 client.Send(messageDisassembled.Stream, messageDisassembled.Type);
-                             }
-
-                             client.Receive(CallbackReceive);
-                         }
-
-                         client.Receive(CallbackReceive);
-                     });
-
-        client.Connect("127.0.0.1", 6969,
-                       (error, connected) =>
-                       {
-                           void CallbackReceive(SocketError error, MessageDisassembled messageDisassembled)
-                           {
-                               if (error != SocketError.Success)
-                               {
-                                   eventsNetworking.OnMessageReceiveError(error);
-                               }
-                               else
-                               {
-                                   if (messageDisassembled != null)
-                                   {
-                                       eventsNetworking.OnMessageReceive(messageDisassembled);
-                                   }
-                               }
-
-                               client.Receive(CallbackReceive);
-                           }
-
-                           client.Receive(CallbackReceive);
-                       });
     }
 
     void OnSelectionChangedCollectionViewUsers(object sender, SelectionChangedEventArgs e)
@@ -207,19 +152,8 @@ public partial class MainPage : ContentPage
                                            editorSendFromReturn ? editor.Text[..^ 1] : editor.Text);
         AddUserMessage(message);
 
-        client.Send(Encoding.Unicode.GetBytes(message.Text), Message.Type.TEXT,
-                    (error, bytesTransferred) =>
-                    {
-                        if (error != SocketError.Success)
-                        {
-                            eventsNetworking.OnMessageSendError(error);
-                        }
-
-                        if (bytesTransferred > 0)
-                        {
-                            eventsNetworking.OnMessageSend(bytesTransferred);
-                        }
-                    });
+        managerNetwork.Send(GetUserSelected().Ip,
+                            new ContextText(message.Text, (uint)((DateTimeOffset)DateTime.Now).ToUnixTimeSeconds()));
         UpdateLabelMessages();
     }
 

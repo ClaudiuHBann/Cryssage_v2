@@ -10,7 +10,7 @@ public class ContextFileInfo : IContext
     public uint Size { get; set; } = 0;
     public uint Timestamp { get; set; } = 0;
 
-    public ContextFileInfo(string name, uint size, uint timestamp, Guid guid) : base(Message.Type.FILE_INFO, guid)
+    public ContextFileInfo(string name, uint size, uint timestamp) : base(Message.Type.FILE_INFO, Guid.NewGuid())
     {
         Name = name;
         Size = size;

@@ -31,8 +31,8 @@ public class IContext
             return JsonConvert.DeserializeObject<ContextText>(Utility.ENCODING_DEFAULT.GetString(stream));
         case Message.Type.FILE_INFO:
             return JsonConvert.DeserializeObject<ContextFileInfo>(Utility.ENCODING_DEFAULT.GetString(stream));
-        case Message.Type.FILE_REQUEST:
-            return JsonConvert.DeserializeObject<ContextFileRequest>(Utility.ENCODING_DEFAULT.GetString(stream));
+        case Message.Type.REQUEST:
+            return JsonConvert.DeserializeObject<ContextRequest>(Utility.ENCODING_DEFAULT.GetString(stream));
         case Message.Type.FILE_DATA:
             return new ContextFileData(stream, guid);
         }
@@ -41,7 +41,8 @@ public class IContext
     }
 
     // Used for progress context
-    public static ContextProgress CreateProgress(Guid guid, uint total) => new(total, guid);
+    public static ContextProgress CreateProgress(Guid guid, uint total, ContextProgress.Type_ type) => new(type, total,
+                                                                                                           guid);
 
     // Used for error context
     public static IContext CreateError() => new(Message.Type.ERROR, Guid.NewGuid());
@@ -59,8 +60,8 @@ public class IContext
             return Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject((ContextText)this));
         case Message.Type.FILE_INFO:
             return Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject((ContextFileInfo)this));
-        case Message.Type.FILE_REQUEST:
-            return Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject((ContextFileRequest)this));
+        case Message.Type.REQUEST:
+            return Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject((ContextRequest)this));
         case Message.Type.FILE_DATA:
             return ((ContextFileData)this).Stream;
         case Message.Type.ERROR:

@@ -8,8 +8,7 @@ using Callback = Action<AsyncEventArgs>;
 // Async TCP client that (dis)connects and sends/receives a stream of bytes
 public class TCPClientRaw
 {
-    readonly TcpClient Client;
-    bool Connected = false;
+    protected readonly TcpClient Client;
 
     protected TCPClientRaw()
     {
@@ -19,30 +18,23 @@ public class TCPClientRaw
     protected TCPClientRaw(Socket client)
     {
         Client = new() { Client = client };
-        Connected = true;
     }
-
-    public IPEndPoint? EndPointRemote => (IPEndPoint?)Client.Client.RemoteEndPoint;
 
     public void Connect(string ip, ushort port, Callback callback)
     {
         SocketAsyncEventArgs args = new() { RemoteEndPoint = new IPEndPoint(IPAddress.Parse(ip), port) };
         args.Completed += (sender, args) =>
-        {
-            Connected = args.SocketError == SocketError.Success;
-            callback(new AsyncEventArgs(args.SocketError, Connected));
-        };
+        { callback(new AsyncEventArgs(args.SocketError, Client.Connected)); };
 
         if (!Client.Client.ConnectAsync(args))
         {
-            Connected = args.SocketError == SocketError.Success;
-            callback(new AsyncEventArgs(args.SocketError, Connected));
+            callback(new AsyncEventArgs(args.SocketError, Client.Connected));
         }
     }
 
     protected void SendAll(byte[] stream, Callback? callback = null)
     {
-        if (!Connected)
+        if (!Client.Connected)
         {
             callback?.Invoke(new AsyncEventArgs(SocketError.NotConnected, 0));
             return;
@@ -60,7 +52,7 @@ public class TCPClientRaw
 
     protected void ReceiveAll(byte[] stream, Callback callback)
     {
-        if (!Connected)
+        if (!Client.Connected)
         {
             callback(new AsyncEventArgs(SocketError.NotConnected, 0));
             return;
@@ -78,7 +70,7 @@ public class TCPClientRaw
 
     public void Disconnect(Callback? callback = null)
     {
-        if (!Connected)
+        if (!Client.Connected)
         {
             callback?.Invoke(new AsyncEventArgs(SocketError.NotConnected));
             return;
@@ -88,16 +80,12 @@ public class TCPClientRaw
         if (callback != null)
         {
             args.Completed += (sender, args) =>
-            {
-                callback(new AsyncEventArgs(args.SocketError));
-                Connected = false;
-            };
+            { callback(new AsyncEventArgs(args.SocketError)); };
         }
 
         if (!Client.Client.DisconnectAsync(args))
         {
             callback?.Invoke(new AsyncEventArgs(args.SocketError));
-            Connected = false;
         }
     }
 

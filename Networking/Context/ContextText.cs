@@ -7,7 +7,7 @@ public class ContextText : IContext
     public string Text { get; set; } = "";
     public uint Timestamp { get; set; } = 0;
 
-    public ContextText(string text, uint timestamp, Guid guid) : base(Message.Type.TEXT, guid)
+    public ContextText(string text, uint timestamp) : base(Message.Type.TEXT, Guid.NewGuid())
     {
         Text = text;
         Timestamp = timestamp;

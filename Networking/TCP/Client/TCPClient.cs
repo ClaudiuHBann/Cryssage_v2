@@ -2,6 +2,7 @@
 using Parser.Message;
 using Parser.Message.Header;
 
+using System.Net;
 using System.Net.Sockets;
 
 using Networking.Context;
@@ -21,6 +22,10 @@ public class TCPClient : TCPClientRaw
     public TCPClient(Socket socket) : base(socket)
     {
     }
+
+    public IPEndPoint? EndPointLocal => (IPEndPoint?)Client.Client.LocalEndPoint;
+    public IPEndPoint? EndPointRemote => (IPEndPoint?)Client.Client.RemoteEndPoint;
+    public bool Connected => Client.Client.Connected;
 
     static void SendCallback(Callback callback, CallbackProgress? callbackProgress, ContextProgress context,
                              AsyncEventArgs args)
@@ -51,7 +56,8 @@ public class TCPClient : TCPClientRaw
 
         // create the context progress
         // TODO: watchout, the total bytes are the underlying message size
-        var contextProgress = IContext.CreateProgress(context.GUID, (uint)messageBytes.Length);
+        var contextProgress =
+            IContext.CreateProgress(context.GUID, (uint)messageBytes.Length, ContextProgress.Type_.SEND);
 
         SendAll(messageBytes, (args) => SendCallback(callback, callbackProgress, contextProgress, args));
     }
@@ -64,22 +70,6 @@ public class TCPClient : TCPClientRaw
 
         var message = MessageConverter.BytesToMessage(bytes);
         return MessageManager.FromMessage(message);
-    }
-
-    // when the operation is done the context is the data context else the context is the progress one
-    static void ReceiveCallback(Callback callback, IContext context, AsyncEventArgs args)
-    {
-        if (args.Type != AsyncEventArgs.Type_.PROGRESS || args.Type != AsyncEventArgs.Type_.RECEIVE)
-        {
-            return;
-        }
-
-        if (context.Type == Message.Type.PROGRESS)
-        {
-            ((ContextProgress)context).SetPercentage(args.BytesTransferredTotal);
-        }
-
-        callback(context);
     }
 
     static void ReceiveCallback(Callback callback, CallbackProgress callbackProgress, ContextProgress contextProgress,
@@ -128,7 +118,8 @@ public class TCPClient : TCPClientRaw
 
                        var metadata = MessageConverter.BytesToHeaderMetadata(argsMetadata.Stream);
                        // TODO: watchout, the total bytes are the underlying message size
-                       var contextProgress = IContext.CreateProgress(metadata.GUID, metadata.Size);
+                       var contextProgress =
+                           IContext.CreateProgress(metadata.GUID, metadata.Size, ContextProgress.Type_.RECEIVE);
                        ReceiveAll(new byte[metadata.Size],
                                   (argsData) => ReceiveCallback(callback, callbackProgress, contextProgress,
                                                                 argsMetadata.Stream, argsData));

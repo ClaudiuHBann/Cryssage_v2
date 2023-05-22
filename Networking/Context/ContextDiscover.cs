@@ -4,13 +4,13 @@ namespace Networking.Context
 {
 public class ContextDiscover : IContext
 {
-    public string IP { get; set; } = "0.0.0.0";
-    public ushort Port { get; set; } = 0;
+    public string Ip { get; set; } = "0.0.0.0";
+    public string Name { get; set; } = "Unknown";
 
-    public ContextDiscover(string ip, ushort port, Guid guid) : base(Message.Type.DISCOVER, guid)
+    public ContextDiscover(string ip, string name) : base(Message.Type.DISCOVER, Guid.NewGuid())
     {
-        IP = ip;
-        Port = port;
+        Ip = ip;
+        Name = name;
     }
 }
 }

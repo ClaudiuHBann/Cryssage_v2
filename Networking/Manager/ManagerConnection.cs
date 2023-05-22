@@ -1,26 +1,33 @@
-﻿using System.Collections.Concurrent;
+﻿using Networking.Context;
 
-using System.Net;
 using Networking.TCP.Client;
+using Networking.TCP.Server;
 
 namespace Networking.Manager
 {
 public class ManagerConnection
 {
-    public ConcurrentDictionary<string, TCPClient> Clients = new();
+    readonly ServerProcessor processor;
 
-    public void CreateConnections(List<IPEndPoint> ips) => ips.ForEach(CreateConnection);
-
-    public void CreateConnection(IPEndPoint ipEndPoint)
+    public ManagerConnection(ServerProcessor processor)
     {
+        this.processor = processor;
+    }
+
+    public void CreateConnectionAndSend(string ip, IContext context)
+    {
+        Console.WriteLine(System.Reflection.MethodBase.GetCurrentMethod().Name);
+
         TCPClient client = new();
-        client.Connect(ipEndPoint.Address.ToString(), Utility.PORT_TCP,
+        client.Connect(ip, Utility.PORT_TCP,
                        (args) =>
                        {
-                           if (args.Connected)
+                           if (!args.Connected)
                            {
-                               Clients[ipEndPoint.Address.ToString()] = client;
+                               return;
                            }
+
+                           processor.Process(client, context);
                        });
     }
 }

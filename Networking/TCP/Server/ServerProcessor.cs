@@ -1,20 +1,29 @@
 ﻿using Parser.Message;
 
+using Networking.Context;
+
 using Networking.TCP.Client;
 
 namespace Networking.TCP.Server
 {
 public class ServerProcessor
 {
-    readonly ServerDispatcher dispatcher;
+    public ServerDispatcher Dispatcher;
 
     public ServerProcessor(ServerDispatcher serverDispatcher)
     {
-        dispatcher = serverDispatcher;
+        Dispatcher = serverDispatcher;
+    }
+
+    public void Process(TCPClient client, IContext context)
+    {
+        client.Send(context, (context) => Process(client), (contextProgress) => Dispatcher.Dispatch(contextProgress));
     }
 
     public void Process(TCPClient client)
     {
+        Console.WriteLine(System.Reflection.MethodBase.GetCurrentMethod().Name);
+
         client.Receive(
             (context) =>
             {
@@ -23,9 +32,12 @@ public class ServerProcessor
                     return;
                 }
 
-                client.Send(dispatcher.Dispatch(context), (_) => Process(client));
+                client.Send(Dispatcher.Dispatch(context, client),
+                            _ =>
+                            {},
+                            (contextProgress) => Dispatcher.Dispatch(contextProgress));
             },
-            (contextProgress) => dispatcher.Dispatch(contextProgress));
+            (contextProgress) => Dispatcher.Dispatch(contextProgress));
     }
 }
 }

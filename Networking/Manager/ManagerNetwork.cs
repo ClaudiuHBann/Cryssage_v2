@@ -1,14 +1,24 @@
-﻿namespace Networking.Manager
+﻿using Networking.Context;
+
+namespace Networking.Manager
 {
 public class ManagerNetwork
 {
-    public ManagerTCP ManagerTCP { get; set; }
-    public ManagerBroadcast ManagerBroadcast { get; set; }
+    readonly ManagerTCP ManagerTCP;
+    readonly ManagerBroadcast ManagerBroadcast;
 
     public ManagerNetwork(IContextHandler iContextHandler)
     {
         ManagerTCP = new(iContextHandler);
         ManagerBroadcast = new(ManagerTCP.ManagerConnection);
+    }
+
+    public void Broadcast() => ManagerBroadcast.Broadcast();
+
+    public void Send(string ip, IContext context)
+    {
+        Console.WriteLine(System.Reflection.MethodBase.GetCurrentMethod().Name);
+        ManagerTCP.ManagerConnection.CreateConnectionAndSend(ip, context);
     }
 }
 }

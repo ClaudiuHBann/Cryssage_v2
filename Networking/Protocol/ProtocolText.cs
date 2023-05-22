@@ -11,6 +11,7 @@ public class ProtocolText : IProtocol
 
     public override IContext Exchange(IContext context)
     {
+        ContextHandler.OnReceiveText((ContextText)context);
         return IContext.CreateACK();
     }
 }

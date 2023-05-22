@@ -3,8 +3,10 @@
 using Networking.Context;
 using Networking.Manager;
 
-using Networking.Protocol.File;
 using Networking.Protocol;
+using Networking.Protocol.File;
+
+using Networking.TCP.Client;
 
 namespace Networking.TCP.Server
 {
@@ -19,11 +21,37 @@ public class ServerDispatcher
         ManagerTransferFile = managerTransferFile;
     }
 
-    public IContext Dispatch(IContext context)
+    public IContext Dispatch(IContext context, TCPClient? client = null)
     {
+        if (context.Type == Message.Type.PROGRESS)
+        {
+            var contextProgress = (ContextProgress)context;
+            if (contextProgress.TypeProgress == ContextProgress.Type_.SEND)
+            {
+                ContextHandler.OnSendProgress(contextProgress);
+            }
+            else
+            {
+                ContextHandler.OnReceiveProgress(contextProgress);
+            }
+
+            return IContext.CreateACK();
+        }
+
         IProtocol? protocol = null;
         switch (context.Type)
         {
+        case Message.Type.REQUEST:
+            switch (((ContextRequest)context).TypeRequest)
+            {
+            case Message.Type.DISCOVER:
+                protocol = new ProtocolDiscover(ContextHandler, client);
+                break;
+            case Message.Type.FILE:
+                protocol = new ProtocolFileRequest(ContextHandler, ManagerTransferFile);
+                break;
+            }
+            break;
         case Message.Type.DISCOVER:
             protocol = new ProtocolDiscover(ContextHandler);
             break;
@@ -33,7 +61,7 @@ public class ServerDispatcher
         case Message.Type.FILE_INFO:
             protocol = new ProtocolFileInfo(ContextHandler, ManagerTransferFile);
             break;
-        case Message.Type.FILE_REQUEST:
+        case Message.Type.FILE:
             protocol = new ProtocolFileRequest(ContextHandler, ManagerTransferFile);
             break;
         case Message.Type.FILE_DATA:

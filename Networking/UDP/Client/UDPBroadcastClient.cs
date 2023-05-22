@@ -3,18 +3,23 @@ using Parser.Message;
 
 namespace Networking.UDP.Client
 {
-public class UDPBroadcastClient : UDPBroadcastClientRaw
+public class UDPBroadcastClient
 {
-    public UDPBroadcastClient(ushort port) : base(port)
+    readonly UDPBroadcastClientRaw client;
+
+    public UDPBroadcastClient(UDPBroadcastClientRaw client)
     {
+        this.client = client;
     }
 
     public void Broadcast()
     {
-        var message = MessageManager.ToMessage(Array.Empty<byte>(), Message.Type.BROADCAST);
+        Console.WriteLine(System.Reflection.MethodBase.GetCurrentMethod().Name);
+
+        var message = MessageManager.ToMessage(Array.Empty<byte>(), Message.Type.PING);
         var messageBytes = MessageConverter.MessageToBytes(message);
 
-        BroadcastAll(messageBytes);
+        client.BroadcastAll(messageBytes);
     }
 }
 }

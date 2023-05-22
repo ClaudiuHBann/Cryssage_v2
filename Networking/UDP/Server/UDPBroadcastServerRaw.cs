@@ -4,50 +4,43 @@ using Parser.Message.Header;
 using System.Net;
 using System.Net.Sockets;
 using Networking.UDP.Client;
-using System.Net.NetworkInformation;
 
 namespace Networking.UDP.Server
 {
 using Callback = Action<IPEndPoint>;
 
-public class UDPBroadcastServerRaw : UDPBroadcastClientRaw
+public class UDPBroadcastServerRaw
 {
-    public UDPBroadcastServerRaw(ushort port) : base(port)
-    {
-    }
+    readonly UDPBroadcastClientRaw client;
 
-    // When we broadcast and listen we receive out broadcast so this function gets all the network interfaces we have
-    // and checks if the broadcast message came from us
-    static bool IsEndPointRemoteMe(EndPoint endPointRemote)
+    public UDPBroadcastServerRaw(UDPBroadcastClientRaw client)
     {
-        return NetworkInterface.GetAllNetworkInterfaces()
-            .Where(adapter => adapter.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 ||
-                              adapter.NetworkInterfaceType == NetworkInterfaceType.Ethernet)
-            .SelectMany(property => property.GetIPProperties().UnicastAddresses)
-            .Where(addressUnicast => addressUnicast.Address.AddressFamily == AddressFamily.InterNetwork)
-            .Any(addressUnicast => addressUnicast.Address == ((IPEndPoint)endPointRemote).Address);
+        this.client = client;
     }
 
     public void Start(Callback callback)
     {
         // the broadcast message is just a metadata so thats all we need to read
-        ReceiveAll(new byte[HeaderMetadata.SIZE],
-                   (args) =>
-                   {
-                       // no error and we got the metadata and the operation is done so we have the end point
-                       if (args.Error == SocketError.Success && args.Stream != null && args.Done)
-                       {
-                           var metadata = MessageConverter.BytesToHeaderMetadata(args.Stream);
-                           // we got a broadcast message and a valid remote end point and it's not us
-                           if (metadata.Type == Message.Type.BROADCAST && args.EndPointRemote != null &&
-                               !IsEndPointRemoteMe(args.EndPointRemote))
-                           {
-                               callback((IPEndPoint)args.EndPointRemote);
-                           }
-                       }
+        client.ReceiveAll(new byte[HeaderMetadata.SIZE],
+                          (args) =>
+                          {
+                              // no error and we got the metadata and the operation is done so we have the end point
+                              if (args.Error == SocketError.Success && args.Stream != null && args.Done)
+                              {
+                                  var metadata = MessageConverter.BytesToHeaderMetadata(args.Stream);
+                                  var endPointRemoteIP = (IPEndPoint?)args.EndPointRemote;
 
-                       Start(callback);
-                   });
+                                  // we got a broadcast message and a valid remote end point and it's not us
+                                  if (metadata.Type == Message.Type.PING && endPointRemoteIP != null &&
+                                      BroadcastIPFinder.GetLocalIPV4().ToString() !=
+                                          endPointRemoteIP.Address.ToString())
+                                  {
+                                      callback(endPointRemoteIP);
+                                  }
+                              }
+
+                              Start(callback);
+                          });
     }
 }
 }

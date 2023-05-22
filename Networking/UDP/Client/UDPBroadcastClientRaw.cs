@@ -10,17 +10,18 @@ public class UDPBroadcastClientRaw
     readonly UdpClient Client = new();
     readonly ushort Port;
 
-    protected UDPBroadcastClientRaw(ushort port)
+    public UDPBroadcastClientRaw(ushort port)
     {
         Client.EnableBroadcast = true;
         Client.Client.Bind(new IPEndPoint(IPAddress.Any, port));
         Port = port;
     }
 
-    protected void BroadcastAll(byte[] stream, Callback? callback = null)
+    public void BroadcastAll(byte[] stream, Callback? callback = null)
     {
         SocketAsyncEventArgs args =
-            new() { UserToken = callback, RemoteEndPoint = new IPEndPoint(IPAddress.Broadcast, Port) };
+            new() { UserToken = callback,
+                    RemoteEndPoint = new IPEndPoint(IPAddress.Parse(BroadcastIPFinder.GetBroadcastIP()), Port) };
         args.SetBuffer(stream, 0, stream.Length);
         args.Completed += OnSendReceiveShard;
 
@@ -30,7 +31,7 @@ public class UDPBroadcastClientRaw
         }
     }
 
-    protected void ReceiveAll(byte[] stream, Callback callback)
+    public void ReceiveAll(byte[] stream, Callback callback)
     {
         SocketAsyncEventArgs args = new() { UserToken = callback, RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0) };
         args.SetBuffer(stream, 0, stream.Length);

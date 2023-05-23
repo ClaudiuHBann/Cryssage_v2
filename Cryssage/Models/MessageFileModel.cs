@@ -14,8 +14,8 @@ public partial class MessageFileModel : MessageModel
     uint size;
 
     public MessageFileModel(string sender, DateTime timestamp, MessageState state, bool mine, string icon, string name,
-                            uint size)
-        : base(MessageType.FILE, sender, timestamp, state, mine)
+                            uint size, Guid? guid = null)
+        : base(guid ?? Guid.NewGuid(), MessageType.FILE, sender, timestamp, state, mine)
     {
         Icon = icon;
         Name = name;

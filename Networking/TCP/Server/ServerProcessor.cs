@@ -30,8 +30,8 @@ public class ServerProcessor
                     return;
                 }
 
-                string endPointRemote = "0.0.0.0";
-                if (client.EndPointRemote != null)
+                string endPointRemote = "127.0.0.1";
+                if (client.EndPointRemote != null && client.EndPointRemote.Address.ToString() != "::ffff:127.0.0.1")
                 {
                     endPointRemote = client.EndPointRemote.Address.ToString();
                 }

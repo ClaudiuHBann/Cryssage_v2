@@ -24,11 +24,6 @@ public partial class UserModel : ObservableObject
     [ObservableProperty]
     MessageView messageView;
 
-    public UserModel()
-    {
-        MessageView = new();
-    }
-
     public UserModel(string ip, string avatar, string name, DateTime time, string message)
     {
         Ip = ip;

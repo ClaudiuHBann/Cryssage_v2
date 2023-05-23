@@ -10,6 +10,8 @@ using Networking.Manager;
 using Networking.Context;
 using Networking.Context.File;
 
+using Parser.Message;
+
 namespace Cryssage
 {
 public partial class MainPage : ContentPage, IContextHandler
@@ -46,7 +48,8 @@ public partial class MainPage : ContentPage, IContextHandler
     {
         Console.WriteLine($"OnReceiveText({context.Text}, {context.DateTime})");
 
-        var message = new MessageTextModel(context.IP, context.DateTime, MessageState.SEEN, false, context.Text);
+        var message = new MessageTextModel(GetUserByIP(context.IP).Name, context.DateTime, MessageState.SEEN, false,
+                                           context.Text, context.GUID);
         GetUserByIP(context.IP).MessageView.Items.Add(message);
     }
 
@@ -54,8 +57,8 @@ public partial class MainPage : ContentPage, IContextHandler
     {
         Console.WriteLine($"OnReceiveFileInfo({context.Name}, {context.Size}, {context.DateTime})");
 
-        var message = new MessageFileModel(context.IP, context.DateTime, MessageState.SEEN, false, "dotnet_bot.png",
-                                           context.Name, context.Size);
+        var message = new MessageFileModel(GetUserByIP(context.IP).Name, context.DateTime, MessageState.SEEN, false,
+                                           "dotnet_bot.png", context.Name, context.Size, context.GUID);
         GetUserByIP(context.IP).MessageView.Items.Add(message);
     }
 
@@ -77,6 +80,11 @@ public partial class MainPage : ContentPage, IContextHandler
 
         viewUser = uv;
         collectionViewUsers.ItemsSource = viewUser.Items;
+
+#if DEBUG
+        var userNew = new UserModel("127.0.0.1", "dotnet_bot.png", "Pulea", DateTime.MinValue, "");
+        viewUser.Items.Add(userNew);
+#endif // DEBUG
     }
 
     void OnSelectionChangedCollectionViewUsers(object sender, SelectionChangedEventArgs e)
@@ -125,11 +133,13 @@ public partial class MainPage : ContentPage, IContextHandler
     {
         if (IsAnyUserSelected())
         {
-            var message = new MessageTextModel("You", DateTime.Now, MessageState.SEEN, true,
-                                               editorSendFromReturn ? editor.Text[..^ 1] : editor.Text);
+            var contextText = new ContextText(editorSendFromReturn ? editor.Text[..^ 1] : editor.Text);
+
+            var message = new MessageTextModel(Environment.MachineName, DateTime.Now, MessageState.SEEN, true,
+                                               contextText.Text, contextText.GUID);
             AddUserSelectedMessage(message);
 
-            managerNetwork.Send(GetUserSelected().Ip, new ContextText(message.Text));
+            managerNetwork.Send(GetUserSelected().Ip, contextText);
         }
 
         UpdateChatBackgroundMessage();
@@ -200,13 +210,20 @@ public partial class MainPage : ContentPage, IContextHandler
         if (file != null)
         {
             var fileSize = (uint) new FileInfo(file.FullPath).Length;
+            var contextFileInfo = new ContextFileInfo(file.FileName, fileSize);
 
-            var message = new MessageFileModel("You", DateTime.UtcNow, MessageState.SEEN, true, "dotnet_bot.png",
-                                               file.FileName, fileSize);
+            var message = new MessageFileModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN, true,
+                                               "dotnet_bot.png", file.FileName, fileSize, contextFileInfo.GUID);
             AddUserSelectedMessage(message);
 
-            managerNetwork.Send(GetUserSelected().Ip, new ContextFileInfo(file.FileName, fileSize));
+            managerNetwork.Send(GetUserSelected().Ip, contextFileInfo);
         }
+    }
+
+    void OnClickedImageButtonDownload(object sender, EventArgs e)
+    {
+        var messageModel = (MessageModel)((ImageButton)sender).BindingContext;
+        managerNetwork.Send(GetUserSelected().Ip, new ContextRequest(Message.Type.FILE, messageModel.Guid));
     }
 }
 }

@@ -104,6 +104,7 @@
                                Text="{Binding Size, Converter={StaticResource converterSizeAsString}}" />
 
                         <ImageButton Grid.Column="2"
+                                     Clicked="OnClickedImageButtonDownload"
                                      BackgroundColor="{Binding Mine, Converter={StaticResource converterMineToBackgroundColor}}"
                                      Grid.RowSpan="2">
                             <ImageButton.Source>
@@ -261,7 +262,8 @@
                         </ImageButton.Source>
                     </ImageButton>
 
-                    <ImageButton Grid.Column="1" Clicked="OnClickedImageButtonAttach">
+                    <ImageButton Grid.Column="1"
+                                 Clicked="OnClickedImageButtonAttach">
                         <ImageButton.Source>
                             <FontImageSource Glyph="{x:Static resources:FontIcons.Paperclip}"
                                              FontFamily="IconFontTypes"

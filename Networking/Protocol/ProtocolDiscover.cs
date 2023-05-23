@@ -20,12 +20,6 @@ public class ProtocolDiscover : IProtocol
     {
         if (context.Type == Message.Type.REQUEST)
         {
-            string endPointLocal = "0.0.0.0";
-            if (client != null && client.EndPointLocal != null)
-            {
-                endPointLocal = client.EndPointLocal.Address.ToString();
-            }
-
             return new ContextDiscover(Environment.MachineName);
         }
         else

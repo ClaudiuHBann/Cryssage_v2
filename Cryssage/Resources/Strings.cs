@@ -1,6 +1,6 @@
-﻿namespace Cryssage.Helpers
+﻿namespace Cryssage.Resources
 {
-public class HelperStrings
+public class Strings
 {
     public const string MessageUserSelectedNone = "Please choose the user you want to speak with :)";
     public const string MessageUserSelectedMessagesNone =

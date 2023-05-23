@@ -46,14 +46,17 @@ public partial class MainPage : ContentPage, IContextHandler
     {
         Console.WriteLine($"OnReceiveText({context.Text}, {context.DateTime})");
 
-        var message = new MessageTextModel("", MessageType.TEXT, "Enemy", context.DateTime, MessageState.SEEN, false,
-                                           context.Text);
+        var message = new MessageTextModel(context.IP, context.DateTime, MessageState.SEEN, false, context.Text);
         GetUserByIP(context.IP).MessageView.Items.Add(message);
     }
 
     public void OnReceiveFileInfo(ContextFileInfo context)
     {
         Console.WriteLine($"OnReceiveFileInfo({context.Name}, {context.Size}, {context.DateTime})");
+
+        var message = new MessageFileModel(context.IP, context.DateTime, MessageState.SEEN, false, "dotnet_bot.png",
+                                           context.Name, context.Size);
+        GetUserByIP(context.IP).MessageView.Items.Add(message);
     }
 
     public void OnReceiveProgress(ContextProgress context)
@@ -120,7 +123,7 @@ public partial class MainPage : ContentPage, IContextHandler
 
     void EditorSend()
     {
-        var message = new MessageTextModel("", MessageType.TEXT, "You", DateTime.Now, MessageState.SEEN, true,
+        var message = new MessageTextModel("You", DateTime.Now, MessageState.SEEN, true,
                                            editorSendFromReturn ? editor.Text[..^ 1] : editor.Text);
         AddUserSelectedMessage(message);
 

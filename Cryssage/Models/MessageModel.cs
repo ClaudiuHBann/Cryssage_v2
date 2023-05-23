@@ -19,9 +19,6 @@ public enum MessageState
 public partial class MessageModel : ObservableObject
 {
     [ObservableProperty]
-    string id;
-
-    [ObservableProperty]
     MessageType type;
 
     [ObservableProperty]
@@ -46,13 +43,8 @@ public partial class MessageModel : ObservableObject
     public static readonly Thickness LeftMargin = new(10, 0, 0, LeftMarginBottom);
     public static readonly Thickness RightMargin = new(0, 0, 10, LeftMarginBottom);
 
-    public MessageModel()
+    public MessageModel(MessageType type, string sender, DateTime timestamp, MessageState state, bool mine)
     {
-    }
-
-    public MessageModel(string id, MessageType type, string sender, DateTime timestamp, MessageState state, bool mine)
-    {
-        Id = id;
         Type = type;
         Sender = sender;
         Timestamp = timestamp;

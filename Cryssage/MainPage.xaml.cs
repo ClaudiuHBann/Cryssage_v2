@@ -1,43 +1,38 @@
 ﻿using System.Runtime.InteropServices;
 using System.Collections.ObjectModel;
-using System.Text;
 
-using System.Net.Sockets;
-using Networking.TCP.Server;
-using Networking.TCP.Client;
-
-using Parser.Message;
-
-using Cryssage.Helpers;
-using Cryssage.Models;
 using Cryssage.Views;
-using Cryssage.Events;
+using Cryssage.Models;
+using Cryssage.Resources;
 
 using Networking;
+using Networking.Manager;
 using Networking.Context;
 using Networking.Context.File;
-using Networking.Manager;
 
 namespace Cryssage
 {
 public partial class MainPage : ContentPage, IContextHandler
 {
-    UserView viewUser;
+    [LibraryImport("User32.dll")]
+    private static partial short GetAsyncKeyState(int vKey);
 
+    UserView viewUser;
     readonly ManagerNetwork managerNetwork;
-    readonly EventsUI eventsUI = new();
+
+    bool editorSendFromReturn = false;
 
     public void OnDiscover(ContextDiscover context)
     {
         Console.WriteLine($"OnDiscover({context.Name})");
 
-        if (viewUser.Items.Any(user => user.Ip == context.Ip))
+        if (viewUser.Items.Any(user => user.Ip == context.IP))
         {
-            viewUser.Items.First(user => user.Ip == context.Ip).Name = context.Name;
+            viewUser.Items.First(user => user.Ip == context.IP).Name = context.Name;
         }
         else
         {
-            var userNew = new UserModel(context.Ip, "dotnet_bot.png", context.Name, DateTime.MinValue, "");
+            var userNew = new UserModel(context.IP, "dotnet_bot.png", context.Name, DateTime.MinValue, "");
             viewUser.Items.Add(userNew);
         }
     }
@@ -49,18 +44,16 @@ public partial class MainPage : ContentPage, IContextHandler
 
     public void OnReceiveText(ContextText context)
     {
-        Console.WriteLine($"OnReceiveText({context.Text}, {context.Timestamp})");
+        Console.WriteLine($"OnReceiveText({context.Text}, {context.DateTime})");
 
-        DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-        dateTime = dateTime.AddSeconds(context.Timestamp).ToLocalTime();
-        var message =
-            new MessageTextModel("", MessageType.TEXT, "Enemy", dateTime, MessageState.SEEN, false, context.Text);
-        AddUserMessage(message);
+        var message = new MessageTextModel("", MessageType.TEXT, "Enemy", context.DateTime, MessageState.SEEN, false,
+                                           context.Text);
+        GetUserByIP(context.IP).MessageView.Items.Add(message);
     }
 
     public void OnReceiveFileInfo(ContextFileInfo context)
     {
-        Console.WriteLine($"OnReceiveFileInfo({context.Name}, {context.Size}, {context.Timestamp})");
+        Console.WriteLine($"OnReceiveFileInfo({context.Name}, {context.Size}, {context.DateTime})");
     }
 
     public void OnReceiveProgress(ContextProgress context)
@@ -73,22 +66,6 @@ public partial class MainPage : ContentPage, IContextHandler
         managerNetwork = new(this);
 
         InitializeUI(uv);
-        InitializeEventsUI();
-    }
-
-    void InitializeEventsUI()
-    {
-        eventsUI.OnMessageAdd += (message) =>
-        {
-            MainThread.BeginInvokeOnMainThread(() =>
-                                               {
-                                                   AddUserMessage(message);
-
-                                                   UpdateSelectedUserLastMessage(((MessageTextModel)message).Text,
-                                                                                 DateTime.Now);
-                                                   UpdateLabelMessages();
-                                               });
-        };
     }
 
     void InitializeUI(UserView uv)
@@ -101,7 +78,7 @@ public partial class MainPage : ContentPage, IContextHandler
 
     void OnSelectionChangedCollectionViewUsers(object sender, SelectionChangedEventArgs e)
     {
-        UpdateLabelMessages();
+        UpdateChatBackgroundMessage();
 
         collectionViewMessages.ItemsSource = GetUserSelectedItems();
     }
@@ -117,14 +94,9 @@ public partial class MainPage : ContentPage, IContextHandler
         EditorReset();
     }
 
-    [LibraryImport("User32.dll")]
-    private static partial short GetAsyncKeyState(int vKey);
-
-    bool editorSendFromReturn = false;
-
     void OnTextChangedEditor(object sender, TextChangedEventArgs e)
     {
-        buttonSendRecordIcon.Glyph = editor.Text.Length > 0 ? HelperFontIcons.Airplane : HelperFontIcons.Microphone;
+        buttonSendRecordIcon.Glyph = editor.Text.Length > 0 ? FontIcons.Airplane : FontIcons.Microphone;
 
         const int VK_RETURN = 0x0D;
         var VK_RETURN_STATE = GetAsyncKeyState(VK_RETURN);
@@ -150,24 +122,20 @@ public partial class MainPage : ContentPage, IContextHandler
     {
         var message = new MessageTextModel("", MessageType.TEXT, "You", DateTime.Now, MessageState.SEEN, true,
                                            editorSendFromReturn ? editor.Text[..^ 1] : editor.Text);
-        AddUserMessage(message);
+        AddUserSelectedMessage(message);
 
-        managerNetwork.Send(GetUserSelected().Ip,
-                            new ContextText(message.Text, (uint)((DateTimeOffset)DateTime.Now).ToUnixTimeSeconds()));
-        UpdateLabelMessages();
+        managerNetwork.Send(GetUserSelected().Ip, new ContextText(message.Text, DateTime.UtcNow));
+        UpdateChatBackgroundMessage();
     }
 
     void EditorReset()
     {
         editor.Text = "";
-        buttonSendRecordIcon.Glyph = HelperFontIcons.Microphone;
+        buttonSendRecordIcon.Glyph = FontIcons.Microphone;
         editorSendFromReturn = false;
     }
 
-    int GetUserSelectedIndex()
-    {
-        return viewUser.Items.IndexOf((UserModel)collectionViewUsers.SelectedItem);
-    }
+    int GetUserSelectedIndex() => viewUser.Items.IndexOf((UserModel)collectionViewUsers.SelectedItem);
 
     ObservableCollection<MessageModel> GetUserSelectedItems()
     {
@@ -181,25 +149,11 @@ public partial class MainPage : ContentPage, IContextHandler
         return index == -1 ? null : viewUser.Items[index];
     }
 
-    void UpdateSelectedUserLastMessage(string message, DateTime dateTime)
-    {
-        var index = GetUserSelectedIndex();
-        if (index == -1)
-        {
-            return;
-        }
+    UserModel GetUserByIP(string ip) => viewUser.Items.Where(user => user.Ip == ip).First();
 
-        viewUser.Items[index].Message = message;
-        viewUser.Items[index].Time = dateTime;
-    }
+    void AddUserSelectedMessage(MessageModel messageModel) => GetUserSelectedItems()?.Add(messageModel);
 
-    void AddUserMessage(MessageModel messageModel)
-    {
-        var userSelectedItems = GetUserSelectedItems();
-        userSelectedItems?.Add(messageModel);
-    }
-
-    void UpdateLabelMessages()
+    void UpdateChatBackgroundMessage()
     {
         if (GetUserSelectedItems().Count > 0)
         {
@@ -207,13 +161,10 @@ public partial class MainPage : ContentPage, IContextHandler
         }
         else
         {
-            labelMessages.Text = string.Format(HelperStrings.MessageUserSelectedMessagesNone, GetUserSelected().Name);
+            labelMessages.Text = string.Format(Strings.MessageUserSelectedMessagesNone, GetUserSelected().Name);
         }
     }
 
-    bool IsAnyUserSelected()
-    {
-        return GetUserSelectedIndex() != -1;
-    }
+    bool IsAnyUserSelected() => GetUserSelectedIndex() != -1;
 }
 }

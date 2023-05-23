@@ -234,7 +234,12 @@
                        Text="{x:Static resources:Strings.MessageUserSelectedNone}" />
 
                 <CollectionView x:Name="collectionViewMessages"
-                                ItemTemplate="{StaticResource dataTemplateSelectorMessage}" />
+                                ItemTemplate="{StaticResource dataTemplateSelectorMessage}">
+                    <CollectionView.GestureRecognizers>
+                        <DropGestureRecognizer AllowDrop="True"
+                                               Drop="OnDropCollectionViewMessages" />
+                    </CollectionView.GestureRecognizers>
+                </CollectionView>
 
                 <Grid Grid.Row="1"
                       MaximumHeightRequest="100"
@@ -256,7 +261,7 @@
                         </ImageButton.Source>
                     </ImageButton>
 
-                    <ImageButton Grid.Column="1">
+                    <ImageButton Grid.Column="1" Clicked="OnClickedImageButtonAttach">
                         <ImageButton.Source>
                             <FontImageSource Glyph="{x:Static resources:FontIcons.Paperclip}"
                                              FontFamily="IconFontTypes"

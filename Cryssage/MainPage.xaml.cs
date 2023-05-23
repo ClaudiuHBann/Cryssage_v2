@@ -123,11 +123,15 @@ public partial class MainPage : ContentPage, IContextHandler
 
     void EditorSend()
     {
-        var message = new MessageTextModel("You", DateTime.Now, MessageState.SEEN, true,
-                                           editorSendFromReturn ? editor.Text[..^ 1] : editor.Text);
-        AddUserSelectedMessage(message);
+        if (IsAnyUserSelected())
+        {
+            var message = new MessageTextModel("You", DateTime.Now, MessageState.SEEN, true,
+                                               editorSendFromReturn ? editor.Text[..^ 1] : editor.Text);
+            AddUserSelectedMessage(message);
 
-        managerNetwork.Send(GetUserSelected().Ip, new ContextText(message.Text, DateTime.UtcNow));
+            managerNetwork.Send(GetUserSelected().Ip, new ContextText(message.Text));
+        }
+
         UpdateChatBackgroundMessage();
     }
 
@@ -169,5 +173,40 @@ public partial class MainPage : ContentPage, IContextHandler
     }
 
     bool IsAnyUserSelected() => GetUserSelectedIndex() != -1;
+
+    void OnDropCollectionViewMessages(object sender, DropEventArgs e)
+    {
+        Console.WriteLine(e.Data.Properties.Values.First());
+    }
+
+    async void OnClickedImageButtonAttach(object sender, EventArgs e)
+    {
+        if (!IsAnyUserSelected())
+        {
+            return;
+        }
+
+        FilePickerFileType fileTypes = new(new Dictionary<DevicePlatform, IEnumerable<string>> {
+            { DevicePlatform.iOS, new[] { "public.my.comic.extension" } },
+            { DevicePlatform.Android, new[] { "application/comics" } },
+            { DevicePlatform.WinUI, Array.Empty<string>() },
+            { DevicePlatform.Tizen, new[] { "*/*" } },
+            { DevicePlatform.macOS, new[] { "cbr", "cbz" } }
+        });
+
+        PickOptions options = new() { PickerTitle = "Please select a file to send", FileTypes = fileTypes };
+
+        var file = await FilePicker.Default.PickAsync(options);
+        if (file != null)
+        {
+            var fileSize = (uint) new FileInfo(file.FullPath).Length;
+
+            var message = new MessageFileModel("You", DateTime.UtcNow, MessageState.SEEN, true, "dotnet_bot.png",
+                                               file.FileName, fileSize);
+            AddUserSelectedMessage(message);
+
+            managerNetwork.Send(GetUserSelected().Ip, new ContextFileInfo(file.FileName, fileSize));
+        }
+    }
 }
 }

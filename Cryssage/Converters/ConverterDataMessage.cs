@@ -20,10 +20,10 @@ public class Size : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        var size = (int)value;
+        var size = (uint)value;
 
         var measure = new[] { "B", "KB", "MB", "GB", "TB" };
-        int measureindex = 0, decimals = 0;
+        uint measureindex = 0, decimals = 0;
 
         while (size >= 1024)
         {

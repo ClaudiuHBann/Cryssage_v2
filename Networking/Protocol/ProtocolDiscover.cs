@@ -18,11 +18,15 @@ public class ProtocolDiscover : IProtocol
 
     public override IContext Exchange(IContext context)
     {
-        Console.WriteLine(System.Reflection.MethodBase.GetCurrentMethod().Name);
-
         if (context.Type == Message.Type.REQUEST)
         {
-            return new ContextDiscover(client.EndPointLocal.ToString(), Environment.MachineName);
+            string endPointLocal = "0.0.0.0";
+            if (client != null && client.EndPointLocal != null)
+            {
+                endPointLocal = client.EndPointLocal.Address.ToString();
+            }
+
+            return new ContextDiscover(Environment.MachineName);
         }
         else
         {

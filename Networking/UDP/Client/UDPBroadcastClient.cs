@@ -14,8 +14,6 @@ public class UDPBroadcastClient
 
     public void Broadcast()
     {
-        Console.WriteLine(System.Reflection.MethodBase.GetCurrentMethod().Name);
-
         var message = MessageManager.ToMessage(Array.Empty<byte>(), Message.Type.PING);
         var messageBytes = MessageConverter.MessageToBytes(message);
 

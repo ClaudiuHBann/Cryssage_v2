@@ -17,7 +17,6 @@ public class ManagerNetwork
 
     public void Send(string ip, IContext context)
     {
-        Console.WriteLine(System.Reflection.MethodBase.GetCurrentMethod().Name);
         ManagerTCP.ManagerConnection.CreateConnectionAndSend(ip, context);
     }
 }

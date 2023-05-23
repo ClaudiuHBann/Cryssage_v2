@@ -16,8 +16,6 @@ public class ManagerConnection
 
     public void CreateConnectionAndSend(string ip, IContext context)
     {
-        Console.WriteLine(System.Reflection.MethodBase.GetCurrentMethod().Name);
-
         TCPClient client = new();
         client.Connect(ip, Utility.PORT_TCP,
                        (args) =>

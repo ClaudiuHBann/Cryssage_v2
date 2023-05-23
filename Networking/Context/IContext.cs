@@ -8,6 +8,8 @@ namespace Networking.Context
 // Base class for every receive context and that class used for sending context
 public class IContext
 {
+    // this is set when a context is received in the server processor
+    public string IP { get; set; } = "0.0.0.0";
     // the type of the context is the same as the message type
     public Message.Type Type { get; set; } = Message.Type.UNKNOWN;
     // the guid of the message

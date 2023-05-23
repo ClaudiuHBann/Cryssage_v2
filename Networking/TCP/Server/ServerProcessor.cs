@@ -22,8 +22,6 @@ public class ServerProcessor
 
     public void Process(TCPClient client)
     {
-        Console.WriteLine(System.Reflection.MethodBase.GetCurrentMethod().Name);
-
         client.Receive(
             (context) =>
             {
@@ -31,6 +29,13 @@ public class ServerProcessor
                 {
                     return;
                 }
+
+                string endPointRemote = "0.0.0.0";
+                if (client.EndPointRemote != null)
+                {
+                    endPointRemote = client.EndPointRemote.Address.ToString();
+                }
+                context.IP = endPointRemote;
 
                 client.Send(Dispatcher.Dispatch(context, client),
                             _ =>

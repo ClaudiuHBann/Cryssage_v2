@@ -1,7 +1,6 @@
 ﻿using Parser.Message;
 
 using Networking.Context;
-using Networking.Manager;
 
 using Networking.Protocol;
 using Networking.Protocol.File;
@@ -13,15 +12,13 @@ namespace Networking.TCP.Server
 public class ServerDispatcher
 {
     public IContextHandler ContextHandler { get; set; }
-    readonly ManagerTransferFile ManagerTransferFile;
 
-    public ServerDispatcher(IContextHandler contextHandler, ManagerTransferFile managerTransferFile)
+    public ServerDispatcher(IContextHandler contextHandler)
     {
         ContextHandler = contextHandler;
-        ManagerTransferFile = managerTransferFile;
     }
 
-    public IContext Dispatch(IContext context, TCPClient? client = null)
+    public IContext Dispatch(IContext context)
     {
         if (context.Type == Message.Type.PROGRESS)
         {
@@ -45,10 +42,10 @@ public class ServerDispatcher
             switch (((ContextRequest)context).TypeRequest)
             {
             case Message.Type.DISCOVER:
-                protocol = new ProtocolDiscover(ContextHandler, client);
+                protocol = new ProtocolDiscover(ContextHandler);
                 break;
             case Message.Type.FILE:
-                protocol = new ProtocolFileRequest(ContextHandler, ManagerTransferFile);
+                protocol = new ProtocolFileRequest(ContextHandler);
                 break;
             }
             break;
@@ -59,13 +56,13 @@ public class ServerDispatcher
             protocol = new ProtocolText(ContextHandler);
             break;
         case Message.Type.FILE_INFO:
-            protocol = new ProtocolFileInfo(ContextHandler, ManagerTransferFile);
+            protocol = new ProtocolFileInfo(ContextHandler);
             break;
         case Message.Type.FILE:
-            protocol = new ProtocolFileRequest(ContextHandler, ManagerTransferFile);
+            protocol = new ProtocolFileRequest(ContextHandler);
             break;
         case Message.Type.FILE_DATA:
-            protocol = new ProtocolFileData(ContextHandler, ManagerTransferFile);
+            protocol = new ProtocolFileData(ContextHandler);
             break;
         }
 

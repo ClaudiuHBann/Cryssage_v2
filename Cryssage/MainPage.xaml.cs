@@ -1,12 +1,9 @@
 ﻿using System.Runtime.InteropServices;
-using System.Collections.ObjectModel;
 
 using Cryssage.Views;
 using Cryssage.Models;
 using Cryssage.Resources;
 
-using Networking;
-using Networking.Manager;
 using Networking.Context;
 using Networking.Context.File;
 

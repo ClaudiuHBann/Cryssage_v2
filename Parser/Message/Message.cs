@@ -16,6 +16,7 @@ public class Message
         FILE_INFO, // file info message
         FILE,      // file request to download message
         FILE_DATA, // file data from the file request message
+        FILE_EOF,  // file finish sending
 
         // not a message type but a context type
         // exists here to make things nicer and easier

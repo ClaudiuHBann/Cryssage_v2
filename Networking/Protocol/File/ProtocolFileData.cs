@@ -1,17 +1,12 @@
 ﻿using Networking.Context;
-using Networking.Manager;
 
 namespace Networking.Protocol.File
 {
 public class ProtocolFileData : IProtocol
 {
-    readonly ManagerTransferFile ManagerTransferFile;
-
-    public ProtocolFileData(IContextHandler contextHandler, ManagerTransferFile managerTransferFile)
-        : base(contextHandler)
+    public ProtocolFileData(IContextHandler contextHandler) : base(contextHandler)
     {
         ContextHandler = contextHandler;
-        ManagerTransferFile = managerTransferFile;
     }
 
     public override IContext Exchange(IContext context)

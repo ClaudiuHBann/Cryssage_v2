@@ -2,18 +2,13 @@
 
 using Networking.Context;
 
-using Networking.TCP.Client;
-
 namespace Networking.Protocol
 {
 public class ProtocolDiscover : IProtocol
 {
-    readonly TCPClient? client;
-
-    public ProtocolDiscover(IContextHandler contextHandler, TCPClient? client = null) : base(contextHandler)
+    public ProtocolDiscover(IContextHandler contextHandler) : base(contextHandler)
     {
         ContextHandler = contextHandler;
-        this.client = client;
     }
 
     public override IContext Exchange(IContext context)

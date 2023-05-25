@@ -24,6 +24,9 @@ public partial class UserModel : ObservableObject
     [ObservableProperty]
     MessageView messageView;
 
+    [ObservableProperty]
+    FileView fileView;
+
     public UserModel(string ip, string avatar, string name, DateTime time, string message)
     {
         Ip = ip;
@@ -33,6 +36,7 @@ public partial class UserModel : ObservableObject
         Message = message;
 
         MessageView = new();
+        FileView = new();
     }
 }
 }

@@ -17,6 +17,10 @@ public static class MauiProgram
 
     public static MauiApp CreateMauiApp()
     {
+#if DEBUG
+        AllocConsole();
+#endif
+
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>()
             .ConfigureFonts(fonts =>
@@ -29,10 +33,6 @@ public static class MauiProgram
 
         builder.Services.AddSingleton<MainPage>();
         builder.Services.AddSingleton<UserView>();
-
-#if DEBUG
-        AllocConsole();
-#endif
 
         return builder.Build();
     }

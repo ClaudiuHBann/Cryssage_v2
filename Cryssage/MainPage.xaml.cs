@@ -14,91 +14,38 @@ using Parser.Message;
 
 namespace Cryssage
 {
-public partial class MainPage : ContentPage, IContextHandler
+public partial class MainPage : ContentPage
 {
     [LibraryImport("User32.dll")]
     private static partial short GetAsyncKeyState(int vKey);
 
-    UserView viewUser;
-    readonly ManagerNetwork managerNetwork;
-
+    readonly Context context;
     bool editorSendFromReturn = false;
-
-    public void OnDiscover(ContextDiscover context)
-    {
-        Console.WriteLine($"OnDiscover({context.Name})");
-
-        if (viewUser.Items.Any(user => user.Ip == context.IP))
-        {
-            viewUser.Items.First(user => user.Ip == context.IP).Name = context.Name;
-        }
-        else
-        {
-            var userNew = new UserModel(context.IP, "dotnet_bot.png", context.Name, DateTime.MinValue, "");
-            viewUser.Items.Add(userNew);
-        }
-    }
-
-    public void OnSendProgress(ContextProgress context)
-    {
-        Console.WriteLine($"OnSendProgress({context.Percentage}, {context.Done})");
-    }
-
-    public void OnReceiveText(ContextText context)
-    {
-        Console.WriteLine($"OnReceiveText({context.Text}, {context.DateTime})");
-
-        var message = new MessageTextModel(GetUserByIP(context.IP).Name, context.DateTime, MessageState.SEEN, false,
-                                           context.Text, context.GUID);
-        GetUserByIP(context.IP).MessageView.Items.Add(message);
-    }
-
-    public void OnReceiveFileInfo(ContextFileInfo context)
-    {
-        Console.WriteLine($"OnReceiveFileInfo({context.Name}, {context.Size}, {context.DateTime})");
-
-        var message = new MessageFileModel(GetUserByIP(context.IP).Name, context.DateTime, MessageState.SEEN, false,
-                                           "dotnet_bot.png", context.Name, context.Size, context.GUID);
-        GetUserByIP(context.IP).MessageView.Items.Add(message);
-    }
-
-    public void OnReceiveProgress(ContextProgress context)
-    {
-        Console.WriteLine($"OnReceiveProgress({context.Percentage}, {context.Done})");
-    }
 
     public MainPage(UserView uv)
     {
-        managerNetwork = new(this);
-
-        InitializeUI(uv);
-    }
-
-    void InitializeUI(UserView uv)
-    {
         InitializeComponent();
 
-        viewUser = uv;
-        collectionViewUsers.ItemsSource = viewUser.Items;
-
-        var userNew = new UserModel("127.0.0.1", "dotnet_bot.png", "Pulea", DateTime.MinValue, "");
-        viewUser.Items.Add(userNew);
+        context = new(uv);
+        collectionViewUsers.ItemsSource = uv.Items;
     }
 
     void OnSelectionChangedCollectionViewUsers(object sender, SelectionChangedEventArgs e)
     {
+        context.UserSelected = (UserModel)collectionViewUsers.SelectedItem;
+
         UpdateChatBackgroundMessage();
 
-        collectionViewMessages.ItemsSource = GetUserSelectedItemsMessage();
+        collectionViewMessages.ItemsSource = context.GetUserSelectedItemsMessage();
 
-        var files = GetUserSelectedItemsFile();
+        var files = context.GetUserSelectedItemsFile();
         collectionViewFiles.ItemsSource = files;
         collectionViewFiles.IsVisible = files.Count > 0;
     }
 
     void OnClickButtonSendRecord(object sender, EventArgs e)
     {
-        if (!IsAnyUserSelected())
+        if (!context.IsAnyUserSelected())
         {
             return;
         }
@@ -133,7 +80,7 @@ public partial class MainPage : ContentPage, IContextHandler
 
     async void OnClickedImageButtonAttach(object sender, EventArgs e)
     {
-        if (!IsAnyUserSelected())
+        if (!context.IsAnyUserSelected())
         {
             return;
         }
@@ -156,18 +103,18 @@ public partial class MainPage : ContentPage, IContextHandler
         var folderPath = await Picker.PickFolder();
 
         var messageModel = (MessageModel)((ImageButton)sender).BindingContext;
-        managerNetwork.Send(GetUserSelected().Ip, new ContextRequest(Message.Type.FILE, messageModel.Guid));
+        context.Send(context.GetUserSelected().Ip, new ContextRequest(Message.Type.FILE, messageModel.Guid));
     }
 
     void OnClickedButtonFileRemove(object sender, EventArgs e)
     {
         var messageFileModel = (MessageFileModel)((Button)sender).BindingContext;
-        GetUserSelectedItemsFile().Remove(messageFileModel);
+        context.GetUserSelectedItemsFile().Remove(messageFileModel);
     }
 
     void EditorSend()
     {
-        if (IsAnyUserSelected())
+        if (context.IsAnyUserSelected())
         {
             if (editor.Text != null && editor.Text.Trim(' ').Trim('\n').Trim('\r').Length > 0)
             {
@@ -175,19 +122,19 @@ public partial class MainPage : ContentPage, IContextHandler
                 var messageText = new MessageTextModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN,
                                                        true, contextText.Text, contextText.GUID);
 
-                AddUserSelectedMessage(messageText);
-                managerNetwork.Send(GetUserSelected().Ip, contextText);
+                context.AddUserSelectedMessage(messageText);
+                context.Send(context.GetUserSelected().Ip, contextText);
             }
 
-            foreach (var file in GetUserSelectedItemsFile())
+            foreach (var file in context.GetUserSelectedItemsFile())
             {
                 var messageFile = new MessageFileModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN,
                                                        true, "dotnet_bot.png", file.Name, file.Size);
 
-                AddUserSelectedMessage(messageFile);
-                managerNetwork.Send(GetUserSelected().Ip, new ContextFileInfo(file.Name, file.Size, DateTime.UtcNow));
+                context.AddUserSelectedMessage(messageFile);
+                context.Send(context.GetUserSelected().Ip, new ContextFileInfo(file.Name, file.Size, DateTime.UtcNow));
             }
-            GetUserSelectedItemsFile().Clear();
+            context.GetUserSelectedItemsFile().Clear();
             collectionViewFiles.IsVisible = false;
         }
 
@@ -201,33 +148,9 @@ public partial class MainPage : ContentPage, IContextHandler
         editorSendFromReturn = false;
     }
 
-    int GetUserSelectedIndex() => viewUser.Items.IndexOf((UserModel)collectionViewUsers.SelectedItem);
-
-    ObservableCollection<MessageModel> GetUserSelectedItemsMessage()
-    {
-        var index = GetUserSelectedIndex();
-        return index == -1 ? null : viewUser.Items[index].MessageView.Items;
-    }
-
-    ObservableCollection<MessageFileModel> GetUserSelectedItemsFile()
-    {
-        var index = GetUserSelectedIndex();
-        return index == -1 ? null : viewUser.Items[index].FileView.Items;
-    }
-
-    UserModel GetUserSelected()
-    {
-        var index = GetUserSelectedIndex();
-        return index == -1 ? null : viewUser.Items[index];
-    }
-
-    UserModel GetUserByIP(string ip) => viewUser.Items.Where(user => user.Ip == ip).First();
-
-    void AddUserSelectedMessage(MessageModel messageModel) => GetUserSelectedItemsMessage()?.Add(messageModel);
-
     void AddUserSelectedFile(MessageFileModel messageFileModel)
     {
-        var files = GetUserSelectedItemsFile();
+        var files = context.GetUserSelectedItemsFile();
         if (files == null)
         {
             return;
@@ -239,16 +162,14 @@ public partial class MainPage : ContentPage, IContextHandler
 
     void UpdateChatBackgroundMessage()
     {
-        if (GetUserSelectedItemsMessage().Count > 0)
+        if (context.GetUserSelectedItemsMessage().Count > 0)
         {
             labelMessages.Text = "";
         }
         else
         {
-            labelMessages.Text = string.Format(Strings.MessageUserSelectedMessagesNone, GetUserSelected().Name);
+            labelMessages.Text = string.Format(Strings.MessageUserSelectedMessagesNone, context.GetUserSelected().Name);
         }
     }
-
-    bool IsAnyUserSelected() => GetUserSelectedIndex() != -1;
 }
 }

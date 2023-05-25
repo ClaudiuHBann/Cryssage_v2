@@ -81,22 +81,24 @@ public partial class MainPage : ContentPage, IContextHandler
         viewUser = uv;
         collectionViewUsers.ItemsSource = viewUser.Items;
 
-#if DEBUG
         var userNew = new UserModel("127.0.0.1", "dotnet_bot.png", "Pulea", DateTime.MinValue, "");
         viewUser.Items.Add(userNew);
-#endif // DEBUG
     }
 
     void OnSelectionChangedCollectionViewUsers(object sender, SelectionChangedEventArgs e)
     {
         UpdateChatBackgroundMessage();
 
-        collectionViewMessages.ItemsSource = GetUserSelectedItems();
+        collectionViewMessages.ItemsSource = GetUserSelectedItemsMessage();
+
+        var files = GetUserSelectedItemsFile();
+        collectionViewFiles.ItemsSource = files;
+        collectionViewFiles.IsVisible = files.Count > 0;
     }
 
     void OnClickButtonSendRecord(object sender, EventArgs e)
     {
-        if (!IsAnyUserSelected() || editor.Text.Trim('\r').Length == 0)
+        if (!IsAnyUserSelected())
         {
             return;
         }
@@ -129,17 +131,64 @@ public partial class MainPage : ContentPage, IContextHandler
         OnClickButtonSendRecord(sender, e);
     }
 
+    async void OnClickedImageButtonAttach(object sender, EventArgs e)
+    {
+        if (!IsAnyUserSelected())
+        {
+            return;
+        }
+
+        var files = await Picker.PickAnyFiles();
+        foreach (var file in files)
+        {
+            var fileSize = (uint) new FileInfo(file.FullPath).Length;
+            var contextFileInfo = new ContextFileInfo(file.FileName, fileSize);
+
+            var message = new MessageFileModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN, true,
+                                               "dotnet_bot.png", file.FileName, fileSize, contextFileInfo.GUID);
+
+            AddUserSelectedFile(message);
+        }
+    }
+
+    async void OnClickedImageButtonDownload(object sender, EventArgs e)
+    {
+        var folderPath = await Picker.PickFolder();
+
+        var messageModel = (MessageModel)((ImageButton)sender).BindingContext;
+        managerNetwork.Send(GetUserSelected().Ip, new ContextRequest(Message.Type.FILE, messageModel.Guid));
+    }
+
+    void OnClickedButtonFileRemove(object sender, EventArgs e)
+    {
+        var messageFileModel = (MessageFileModel)((Button)sender).BindingContext;
+        GetUserSelectedItemsFile().Remove(messageFileModel);
+    }
+
     void EditorSend()
     {
         if (IsAnyUserSelected())
         {
-            var contextText = new ContextText(editorSendFromReturn ? editor.Text[..^ 1] : editor.Text);
+            if (editor.Text != null && editor.Text.Trim(' ').Trim('\n').Trim('\r').Length > 0)
+            {
+                var contextText = new ContextText(editorSendFromReturn ? editor.Text[..^ 1] : editor.Text);
+                var messageText = new MessageTextModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN,
+                                                       true, contextText.Text, contextText.GUID);
 
-            var message = new MessageTextModel(Environment.MachineName, DateTime.Now, MessageState.SEEN, true,
-                                               contextText.Text, contextText.GUID);
-            AddUserSelectedMessage(message);
+                AddUserSelectedMessage(messageText);
+                managerNetwork.Send(GetUserSelected().Ip, contextText);
+            }
 
-            managerNetwork.Send(GetUserSelected().Ip, contextText);
+            foreach (var file in GetUserSelectedItemsFile())
+            {
+                var messageFile = new MessageFileModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN,
+                                                       true, "dotnet_bot.png", file.Name, file.Size);
+
+                AddUserSelectedMessage(messageFile);
+                managerNetwork.Send(GetUserSelected().Ip, new ContextFileInfo(file.Name, file.Size, DateTime.UtcNow));
+            }
+            GetUserSelectedItemsFile().Clear();
+            collectionViewFiles.IsVisible = false;
         }
 
         UpdateChatBackgroundMessage();
@@ -154,10 +203,16 @@ public partial class MainPage : ContentPage, IContextHandler
 
     int GetUserSelectedIndex() => viewUser.Items.IndexOf((UserModel)collectionViewUsers.SelectedItem);
 
-    ObservableCollection<MessageModel> GetUserSelectedItems()
+    ObservableCollection<MessageModel> GetUserSelectedItemsMessage()
     {
         var index = GetUserSelectedIndex();
         return index == -1 ? null : viewUser.Items[index].MessageView.Items;
+    }
+
+    ObservableCollection<MessageFileModel> GetUserSelectedItemsFile()
+    {
+        var index = GetUserSelectedIndex();
+        return index == -1 ? null : viewUser.Items[index].FileView.Items;
     }
 
     UserModel GetUserSelected()
@@ -168,11 +223,23 @@ public partial class MainPage : ContentPage, IContextHandler
 
     UserModel GetUserByIP(string ip) => viewUser.Items.Where(user => user.Ip == ip).First();
 
-    void AddUserSelectedMessage(MessageModel messageModel) => GetUserSelectedItems()?.Add(messageModel);
+    void AddUserSelectedMessage(MessageModel messageModel) => GetUserSelectedItemsMessage()?.Add(messageModel);
+
+    void AddUserSelectedFile(MessageFileModel messageFileModel)
+    {
+        var files = GetUserSelectedItemsFile();
+        if (files == null)
+        {
+            return;
+        }
+
+        files.Add(messageFileModel);
+        collectionViewFiles.IsVisible = true;
+    }
 
     void UpdateChatBackgroundMessage()
     {
-        if (GetUserSelectedItems().Count > 0)
+        if (GetUserSelectedItemsMessage().Count > 0)
         {
             labelMessages.Text = "";
         }
@@ -183,47 +250,5 @@ public partial class MainPage : ContentPage, IContextHandler
     }
 
     bool IsAnyUserSelected() => GetUserSelectedIndex() != -1;
-
-    void OnDropCollectionViewMessages(object sender, DropEventArgs e)
-    {
-        Console.WriteLine(e.Data.Properties.Values.First());
-    }
-
-    async void OnClickedImageButtonAttach(object sender, EventArgs e)
-    {
-        if (!IsAnyUserSelected())
-        {
-            return;
-        }
-
-        FilePickerFileType fileTypes = new(new Dictionary<DevicePlatform, IEnumerable<string>> {
-            { DevicePlatform.iOS, new[] { "public.my.comic.extension" } },
-            { DevicePlatform.Android, new[] { "application/comics" } },
-            { DevicePlatform.WinUI, Array.Empty<string>() },
-            { DevicePlatform.Tizen, new[] { "*/*" } },
-            { DevicePlatform.macOS, new[] { "cbr", "cbz" } }
-        });
-
-        PickOptions options = new() { PickerTitle = "Please select a file to send", FileTypes = fileTypes };
-
-        var file = await FilePicker.Default.PickAsync(options);
-        if (file != null)
-        {
-            var fileSize = (uint) new FileInfo(file.FullPath).Length;
-            var contextFileInfo = new ContextFileInfo(file.FileName, fileSize);
-
-            var message = new MessageFileModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN, true,
-                                               "dotnet_bot.png", file.FileName, fileSize, contextFileInfo.GUID);
-            AddUserSelectedMessage(message);
-
-            managerNetwork.Send(GetUserSelected().Ip, contextFileInfo);
-        }
-    }
-
-    void OnClickedImageButtonDownload(object sender, EventArgs e)
-    {
-        var messageModel = (MessageModel)((ImageButton)sender).BindingContext;
-        managerNetwork.Send(GetUserSelected().Ip, new ContextRequest(Message.Type.FILE, messageModel.Guid));
-    }
 }
 }

@@ -1,17 +1,39 @@
-﻿using Networking.Context;
+﻿using Parser.Message;
+
+using Networking.Manager;
+using Networking.Context.File;
+using Networking.Context.Interface;
 
 namespace Networking.Protocol.File
 {
-public class ProtocolFileData : IProtocol
+    public class ProtocolFileData : IProtocol
 {
-    public ProtocolFileData(IContextHandler contextHandler) : base(contextHandler)
+    readonly ManagerFileTransfer managerFileTransfer;
+
+    public ProtocolFileData(IContextHandler contextHandler, ManagerFileTransfer managerFileTransfer)
+        : base(contextHandler)
     {
         ContextHandler = contextHandler;
+        this.managerFileTransfer = managerFileTransfer;
+    }
+
+    public override IContext GetNextContext(IContext context)
+    {
+        // this is only for requests
+        if (context.Type != Message.Type.REQUEST)
+        {
+            return IContext.CreateError();
+        }
+
+        var stream = managerFileTransfer.Read(context.GUID);
+        return stream != null ? new ContextFileData(stream, context.GUID) : IContext.CreateEOS();
     }
 
     public override IContext Exchange(IContext context)
     {
-        return IContext.CreateACK();
+        var contextFileData = (ContextFileData)context;
+        return managerFileTransfer.Write(contextFileData.GUID, contextFileData.Stream) ? IContext.CreateACK()
+                                                                                       : IContext.CreateError();
     }
 }
 }

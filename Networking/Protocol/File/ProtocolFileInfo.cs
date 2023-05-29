@@ -1,9 +1,9 @@
 ﻿using Networking.Context;
-using Networking.Context.File;
+using Networking.Context.Interface;
 
 namespace Networking.Protocol.File
 {
-public class ProtocolFileInfo : IProtocol
+    public class ProtocolFileInfo : IProtocol
 {
     public ProtocolFileInfo(IContextHandler contextHandler) : base(contextHandler)
     {

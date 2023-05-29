@@ -1,8 +1,9 @@
 ﻿using Networking.Context;
+using Networking.Context.Interface;
 
 namespace Networking.Protocol
 {
-public class ProtocolText : IProtocol
+    public class ProtocolText : IProtocol
 {
     public ProtocolText(IContextHandler contextHandler) : base(contextHandler)
     {

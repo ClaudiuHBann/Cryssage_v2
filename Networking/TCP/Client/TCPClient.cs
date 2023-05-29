@@ -6,14 +6,15 @@ using System.Net;
 using System.Net.Sockets;
 
 using Networking.Context;
+using Networking.Context.Interface;
 
 namespace Networking.TCP.Client
 {
-using Callback = Action<IContext>;
-using CallbackProgress = Action<ContextProgress>;
+    using Callback = Action<IContext>;
+    using CallbackProgress = Action<ContextProgress>;
 
-// TCPClientRaw that sends/receives messages
-public class TCPClient : TCPClientRaw
+    // TCPClientRaw that sends/receives messages
+    public class TCPClient : TCPClientRaw
 {
     public TCPClient()
     {
@@ -27,7 +28,7 @@ public class TCPClient : TCPClientRaw
     public IPEndPoint? EndPointRemote => (IPEndPoint?)Client.Client.RemoteEndPoint;
     public bool Connected => Client.Client.Connected;
 
-    static void SendCallback(Callback callback, CallbackProgress? callbackProgress, ContextProgress context,
+    static void SendCallback(CallbackProgress callback, CallbackProgress? callbackProgress, ContextProgress context,
                              AsyncEventArgs args)
     {
         if (args.Error != SocketError.Success || args.Type != AsyncEventArgs.Type_.PROGRESS)
@@ -46,7 +47,7 @@ public class TCPClient : TCPClientRaw
         }
     }
 
-    public void Send(IContext context, Callback callback, CallbackProgress? callbackProgress = null)
+    public void Send(IContext context, CallbackProgress callback, CallbackProgress? callbackProgress = null)
     {
         var contextAsBytes = context.ToStream();
 
@@ -72,7 +73,7 @@ public class TCPClient : TCPClientRaw
         return MessageManager.FromMessage(message);
     }
 
-    static void ReceiveCallback(Callback callback, CallbackProgress callbackProgress, ContextProgress contextProgress,
+    static void ReceiveCallback(Callback callback, CallbackProgress? callbackProgress, ContextProgress contextProgress,
                                 byte[] metadataAsBytes, AsyncEventArgs argsData)
     {
         // error or no data for data context when operation finished
@@ -102,11 +103,11 @@ public class TCPClient : TCPClientRaw
         else
         {
             contextProgress.SetPercentage(argsData.BytesTransferredTotal);
-            callbackProgress(contextProgress);
+            callbackProgress?.Invoke(contextProgress);
         }
     }
 
-    public void Receive(Callback callback, CallbackProgress callbackProgress)
+    public void Receive(Callback callback, CallbackProgress? callbackProgress = null)
     {
         ReceiveAll(new byte[HeaderMetadata.SIZE],
                    (argsMetadata) =>

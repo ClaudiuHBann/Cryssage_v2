@@ -1,5 +1,7 @@
 ﻿using Parser.Message;
 
+using Networking.Context.Interface;
+
 namespace Networking.Context
 {
 public class ContextProgress : IContext

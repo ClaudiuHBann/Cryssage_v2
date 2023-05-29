@@ -61,10 +61,10 @@ public class Context : IContextHandler
 
     public void OnReceiveFileInfo(ContextFileInfo context)
     {
-        Console.WriteLine($"OnReceiveFileInfo({context.Parh}, {context.Size}, {context.DateTime})");
+        Console.WriteLine($"OnReceiveFileInfo({context.Path}, {context.Size}, {context.DateTime})");
 
         var message = new MessageFileModel(GetUserByIP(context.IP).Name, context.DateTime, MessageState.SEEN, false,
-                                           "dotnet_bot.png", context.Parh, context.Size, context.GUID);
+                                           "dotnet_bot.png", context.Path, context.Size, context.GUID);
         GetUserByIP(context.IP).MessageView.Items.Add(message);
     }
 

@@ -1,8 +1,10 @@
 ﻿using Parser.Message;
 
-namespace Networking.Context
+using Networking.Context.Interface;
+
+namespace Networking.Context.Discover
 {
-public class ContextDiscover : IContext
+public class ContextDiscover : ContextResponse
 {
     public string Name { get; set; }
 

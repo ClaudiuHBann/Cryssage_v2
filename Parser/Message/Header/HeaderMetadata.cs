@@ -13,7 +13,8 @@ public class HeaderMetadata
 
     public HeaderMetadata(Guid guid, Message.Type type, uint size)
     {
-        Debug.Assert(Message.Type.UNKNOWN < type && type < Message.Type.COUNT);
+        Debug.Assert(Message.Type.UNKNOWN < type &&
+                     type < Enum.GetValues(typeof(Message.Type)).Cast<Message.Type>().Max());
         Type = type;
 
         GUID = guid;

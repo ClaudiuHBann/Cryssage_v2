@@ -118,7 +118,8 @@ public class MessageConverter
         var guid = new Guid(bytes[guidAsBytesRange]);
 
         Message.Type type = (Message.Type)bytes[Utility.GUID_SIZE];
-        Debug.Assert(Message.Type.UNKNOWN < type && type < Message.Type.COUNT);
+        Debug.Assert(Message.Type.UNKNOWN < type &&
+                     type < Enum.GetValues(typeof(Message.Type)).Cast<Message.Type>().Max());
 
         var sizeAsBytesRange = (int)(Utility.GUID_SIZE + sizeof(Message.Type))..(int)HeaderMetadata.SIZE;
         var sizeAsBytes = bytes[sizeAsBytesRange];

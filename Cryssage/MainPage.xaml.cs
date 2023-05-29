@@ -7,8 +7,6 @@ using Cryssage.Resources;
 using Networking.Context;
 using Networking.Context.File;
 
-using Parser.Message;
-
 namespace Cryssage
 {
 public partial class MainPage : ContentPage
@@ -17,7 +15,6 @@ public partial class MainPage : ContentPage
     private static partial short GetAsyncKeyState(int vKey);
 
     readonly Context context;
-    bool editorSendFromReturn = false;
 
     public MainPage(UserView uv)
     {
@@ -71,7 +68,6 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        editorSendFromReturn = true;
         OnClickButtonSendRecord(sender, e);
     }
 
@@ -86,10 +82,10 @@ public partial class MainPage : ContentPage
         foreach (var file in files)
         {
             var fileSize = (uint) new FileInfo(file.FullPath).Length;
-            var contextFileInfo = new ContextFileInfo(file.FileName, fileSize);
+            var contextFileInfo = new ContextFileInfo(file.FullPath, fileSize);
 
             var message = new MessageFileModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN, true,
-                                               "dotnet_bot.png", file.FileName, fileSize, contextFileInfo.GUID);
+                                               "dotnet_bot.png", file.FullPath, fileSize, contextFileInfo.GUID);
 
             AddUserSelectedFile(message);
         }
@@ -97,10 +93,17 @@ public partial class MainPage : ContentPage
 
     async void OnClickedImageButtonDownload(object sender, EventArgs e)
     {
-        var folderPath = await Picker.PickFolder();
+        var messageFile = (MessageFileModel)((ImageButton)sender).BindingContext;
 
-        var messageModel = (MessageModel)((ImageButton)sender).BindingContext;
-        context.Send(context.GetUserSelected().Ip, new ContextRequest(Message.Type.FILE, messageModel.Guid));
+        var pathFolder = await Picker.PickFolder();
+        if (pathFolder == null)
+        {
+            return;
+        }
+        var pathFile = pathFolder + "\\" + Path.GetFileName(messageFile.FilePath);
+
+        context.Send(context.GetUserSelected().Ip,
+                     new ContextFileRequest(pathFile, messageFile.Size, messageFile.Guid));
     }
 
     void OnClickedButtonFileRemove(object sender, EventArgs e)
@@ -113,9 +116,10 @@ public partial class MainPage : ContentPage
     {
         if (context.IsAnyUserSelected())
         {
-            if (editor.Text != null && editor.Text.Trim(' ').Trim('\n').Trim('\r').Length > 0)
+            var editorTextTrimmed = editor.Text.Trim(' ').Trim('\n').Trim('\r');
+            if (editor.Text != null && editorTextTrimmed.Length > 0)
             {
-                var contextText = new ContextText(editorSendFromReturn ? editor.Text[..^ 1] : editor.Text);
+                var contextText = new ContextText(editorTextTrimmed);
                 var messageText = new MessageTextModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN,
                                                        true, contextText.Text, contextText.GUID);
 
@@ -126,13 +130,12 @@ public partial class MainPage : ContentPage
             foreach (var file in context.GetUserSelectedItemsFile())
             {
                 var messageFile = new MessageFileModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN,
-                                                       true, "dotnet_bot.png", file.Name, file.Size);
+                                                       true, "dotnet_bot.png", file.FilePath, file.Size);
 
                 context.AddUserSelectedMessage(messageFile);
-                context.Send(context.GetUserSelected().Ip, new ContextFileInfo(file.Name, file.Size, DateTime.UtcNow));
+                context.Send(context.GetUserSelected().Ip,
+                             new ContextFileInfo(file.FilePath, file.Size, DateTime.UtcNow));
             }
-            context.GetUserSelectedItemsFile().Clear();
-            collectionViewFiles.IsVisible = false;
         }
 
         UpdateChatBackgroundMessage();
@@ -142,7 +145,9 @@ public partial class MainPage : ContentPage
     {
         editor.Text = "";
         buttonSendRecordIcon.Glyph = FontIcons.Microphone;
-        editorSendFromReturn = false;
+
+        context.GetUserSelectedItemsFile().Clear();
+        collectionViewFiles.IsVisible = false;
     }
 
     void AddUserSelectedFile(MessageFileModel messageFileModel)

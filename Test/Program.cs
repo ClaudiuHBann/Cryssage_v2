@@ -16,3 +16,10 @@ class Program
     }
 }
 }
+
+/*
+    *ONLY THE CLIENT SENDS DATA
+    *ONLY THE SERVER RECEIVES DATA
+
+
+*/

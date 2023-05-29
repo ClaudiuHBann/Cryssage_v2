@@ -8,17 +8,17 @@ public partial class MessageFileModel : MessageModel
     string icon;
 
     [ObservableProperty]
-    string name;
+    string filePath;
 
     [ObservableProperty]
     uint size;
 
-    public MessageFileModel(string sender, DateTime timestamp, MessageState state, bool mine, string icon, string name,
-                            uint size, Guid? guid = null)
+    public MessageFileModel(string sender, DateTime timestamp, MessageState state, bool mine, string icon,
+                            string filePath, uint size, Guid? guid = null)
         : base(guid ?? Guid.NewGuid(), MessageType.FILE, sender, timestamp, state, mine)
     {
         Icon = icon;
-        Name = name;
+        FilePath = filePath;
         Size = size;
     }
 }

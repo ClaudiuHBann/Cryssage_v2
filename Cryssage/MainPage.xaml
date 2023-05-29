@@ -96,7 +96,7 @@
 
                         <Label Grid.Column="1"
                                VerticalOptions="Center"
-                               Text="{Binding Name}" />
+                               Text="{Binding FilePath}" />
 
                         <Label Grid.Row="1"
                                Grid.Column="1"
@@ -286,7 +286,7 @@
 
                                 <Label Grid.Row="1"
                                        VerticalOptions="Center"
-                                       Text="{Binding Name}" />
+                                       Text="{Binding FilePath}" />
 
                                 <Label Grid.Row="1"
                                        Grid.Column="1"

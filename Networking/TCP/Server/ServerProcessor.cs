@@ -1,9 +1,7 @@
 ﻿using Parser.Message;
 
-using Networking.Context;
-
-using Networking.TCP.Client;
 using System.Net;
+using Networking.TCP.Client;
 
 namespace Networking.TCP.Server
 {
@@ -16,9 +14,16 @@ public class ServerProcessor
         Dispatcher = serverDispatcher;
     }
 
-    public void Process(TCPClient client, IContext context)
+    static string GetClientEndPointRemote(TCPClient client)
     {
-        client.Send(context, (context) => Process(client), (contextProgress) => Dispatcher.Dispatch(contextProgress));
+        string endPointRemote = "127.0.0.1";
+        if (client.EndPointRemote != null &&
+            client.EndPointRemote.Address.ToString() != IPAddress.IPv6Loopback.ToString())
+        {
+            endPointRemote = client.EndPointRemote.Address.ToString();
+        }
+
+        return endPointRemote;
     }
 
     public void Process(TCPClient client)
@@ -26,21 +31,14 @@ public class ServerProcessor
         client.Receive(
             (context) =>
             {
-                if (context.Type == Message.Type.ERROR || context.Type == Message.Type.FILE_EOF)
+                if (context.Type == Message.Type.ERROR || context.Type == Message.Type.EOS)
                 {
                     return;
                 }
 
-                string endPointRemote = "127.0.0.1";
-                if (client.EndPointRemote != null &&
-                    client.EndPointRemote.Address.ToString() != IPAddress.IPv6Loopback.ToString())
-                {
-                    endPointRemote = client.EndPointRemote.Address.ToString();
-                }
-                context.IP = endPointRemote;
-
+                context.IP = GetClientEndPointRemote(client);
                 client.Send(Dispatcher.Dispatch(context),
-                            _ => Process(client), (contextProgress) => Dispatcher.Dispatch(contextProgress));
+                            _ => Process(client));
             },
             (contextProgress) => Dispatcher.Dispatch(contextProgress));
     }

@@ -1,8 +1,8 @@
-﻿using Networking.Context;
+﻿using Networking.Context.Interface;
 
 namespace Networking.Manager
 {
-public class ManagerNetwork
+    public class ManagerNetwork
 {
     readonly ManagerTCP ManagerTCP;
     readonly ManagerBroadcast ManagerBroadcast;
@@ -15,9 +15,6 @@ public class ManagerNetwork
 
     public void Broadcast() => ManagerBroadcast.Broadcast();
 
-    public void Send(string ip, IContext context)
-    {
-        ManagerTCP.ManagerConnection.CreateConnectionAndSend(ip, context);
-    }
+    public void Send(string ip, IContext context) => ManagerTCP.ManagerConnection.Send(ip, context);
 }
 }

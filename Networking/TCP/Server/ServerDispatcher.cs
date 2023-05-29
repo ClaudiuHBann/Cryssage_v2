@@ -1,38 +1,47 @@
 ﻿using Parser.Message;
 
+using Networking.Manager;
+
 using Networking.Context;
+using Networking.Context.Interface;
 
 using Networking.Protocol;
 using Networking.Protocol.File;
-
-using Networking.TCP.Client;
 
 namespace Networking.TCP.Server
 {
 public class ServerDispatcher
 {
     public IContextHandler ContextHandler { get; set; }
+    readonly ManagerFileTransfer managerFileTransfer;
+    readonly ManagerConnection managerConnection;
 
-    public ServerDispatcher(IContextHandler contextHandler)
+    public ServerDispatcher(IContextHandler contextHandler, ManagerFileTransfer managerFileTransfer,
+                            ManagerConnection managerConnection)
     {
         ContextHandler = contextHandler;
+        this.managerFileTransfer = managerFileTransfer;
+        this.managerConnection = managerConnection;
+    }
+
+    IContext DispatchProgress(ContextProgress contextProgress)
+    {
+        // the server will receive amounts of data and needs to invoke progress
+        // the server sends just a error or eos so no progress for sending
+        if (contextProgress.TypeProgress == ContextProgress.Type_.RECEIVE)
+        {
+            ContextHandler.OnReceiveProgress(contextProgress);
+        }
+
+        // this context shouldn't be send
+        return IContext.CreateError();
     }
 
     public IContext Dispatch(IContext context)
     {
         if (context.Type == Message.Type.PROGRESS)
         {
-            var contextProgress = (ContextProgress)context;
-            if (contextProgress.TypeProgress == ContextProgress.Type_.SEND)
-            {
-                ContextHandler.OnSendProgress(contextProgress);
-            }
-            else
-            {
-                ContextHandler.OnReceiveProgress(contextProgress);
-            }
-
-            return IContext.CreateACK();
+            return DispatchProgress((ContextProgress)context);
         }
 
         IProtocol? protocol = null;
@@ -45,28 +54,40 @@ public class ServerDispatcher
                 protocol = new ProtocolDiscover(ContextHandler);
                 break;
             case Message.Type.FILE:
-                protocol = new ProtocolFileRequest(ContextHandler);
+                protocol = new ProtocolFileRequest(ContextHandler, managerFileTransfer);
                 break;
             }
             break;
-        case Message.Type.DISCOVER:
-            protocol = new ProtocolDiscover(ContextHandler);
+
+        case Message.Type.RESPONSE:
+            switch (((ContextResponse)context).TypeRespond)
+            {
+            case Message.Type.DISCOVER:
+                protocol = new ProtocolDiscover(ContextHandler);
+                break;
+            }
             break;
+        case Message.Type.FILE_DATA:
+            protocol = new ProtocolFileData(ContextHandler, managerFileTransfer);
+            break;
+
         case Message.Type.TEXT:
             protocol = new ProtocolText(ContextHandler);
             break;
         case Message.Type.FILE_INFO:
             protocol = new ProtocolFileInfo(ContextHandler);
             break;
-        case Message.Type.FILE:
-            protocol = new ProtocolFileRequest(ContextHandler);
-            break;
-        case Message.Type.FILE_DATA:
-            protocol = new ProtocolFileData(ContextHandler);
-            break;
         }
 
-        return protocol != null ? protocol.Exchange(context) : IContext.CreateError();
+        var contextExchange = protocol != null ? protocol.Exchange(context) : IContext.CreateError();
+        // we received a request so we create a client to send the requested data
+        if (context.Type == Message.Type.REQUEST && protocol != null && contextExchange.Type != Message.Type.ERROR)
+        {
+            // provide the request and start sending the response
+            managerConnection.Send(context.IP, contextExchange);
+        }
+
+        return contextExchange;
     }
 }
 }

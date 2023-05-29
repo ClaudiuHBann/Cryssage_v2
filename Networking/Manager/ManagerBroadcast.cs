@@ -1,10 +1,7 @@
-﻿using Parser.Message;
-
-using Networking.Context;
-
-using Networking.UDP.Client;
+﻿using Networking.UDP.Client;
 using Networking.UDP.Server;
-using Networking.TCP.Server;
+
+using Networking.Context.Request;
 
 namespace Networking.Manager
 {
@@ -21,8 +18,7 @@ public class ManagerBroadcast
         server = new(udpBroadcastRaw);
         client = new(udpBroadcastRaw);
 
-        server.Start(ipEndPoint => managerConnection.CreateConnectionAndSend(
-                         ipEndPoint.Address.ToString(), new ContextRequest(Message.Type.DISCOVER, Guid.NewGuid())));
+        server.Start(ipEndPoint => managerConnection.Send(ipEndPoint.Address.ToString(), new ContextDiscoverRequest()));
 
         timer = new Timer(
             _ => client.Broadcast(), null, 0, 5000);

@@ -7,21 +7,13 @@ namespace Networking.Manager
 {
 public class ManagerBroadcast
 {
-    readonly UDPBroadcastServerRaw server;
-    readonly UDPBroadcastClient client;
-    readonly Timer timer;
+    readonly UDPBroadcastServerRaw server = new(Utility.PORT_UDP_BROADCAST_SERVER);
+    readonly UDPBroadcastClient client = new(Utility.PORT_UDP_BROADCAST_CLIENT, 5);
 
     public ManagerBroadcast(ManagerConnection managerConnection)
     {
-        UDPBroadcastClientRaw udpBroadcastRaw = new(Utility.PORT_UDP_BROADCAST);
-
-        server = new(udpBroadcastRaw);
-        client = new(udpBroadcastRaw);
-
         server.Start(ipEndPoint => managerConnection.Send(ipEndPoint.Address.ToString(), new ContextDiscoverRequest()));
-
-        timer = new Timer(
-            _ => client.Broadcast(), null, 0, 5000);
+        client.Start(ipEndPoint => managerConnection.Send(ipEndPoint.Address.ToString(), new ContextDiscoverRequest()));
     }
 
     public void Broadcast() => client.Broadcast();

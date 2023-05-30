@@ -8,20 +8,16 @@ using Callback = Action<AsyncEventArgs>;
 public class UDPBroadcastClientRaw
 {
     readonly UdpClient Client = new();
-    readonly ushort Port;
 
     public UDPBroadcastClientRaw(ushort port)
     {
         Client.EnableBroadcast = true;
         Client.Client.Bind(new IPEndPoint(IPAddress.Any, port));
-        Port = port;
     }
 
-    public void BroadcastAll(byte[] stream, Callback? callback = null)
+    public void SendOrBroadcastToAll(byte[] stream, IPEndPoint endPointRemote, Callback? callback = null)
     {
-        SocketAsyncEventArgs args =
-            new() { UserToken = callback,
-                    RemoteEndPoint = new IPEndPoint(IPAddress.Parse(BroadcastIPFinder.GetBroadcastIP()), Port) };
+        SocketAsyncEventArgs args = new() { UserToken = callback, RemoteEndPoint = endPointRemote };
         args.SetBuffer(stream, 0, stream.Length);
         args.Completed += OnSendReceiveShard;
 
@@ -31,9 +27,9 @@ public class UDPBroadcastClientRaw
         }
     }
 
-    public void ReceiveAll(byte[] stream, Callback callback)
+    public void ReceiveFromAll(byte[] stream, IPEndPoint endPointRemote, Callback callback)
     {
-        SocketAsyncEventArgs args = new() { UserToken = callback, RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0) };
+        SocketAsyncEventArgs args = new() { UserToken = callback, RemoteEndPoint = endPointRemote };
         args.SetBuffer(stream, 0, stream.Length);
         args.Completed += OnSendReceiveShard;
 

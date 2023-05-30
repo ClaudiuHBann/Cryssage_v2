@@ -17,8 +17,7 @@ public class ServerProcessor
     static string GetClientEndPointRemote(TCPClient client)
     {
         string endPointRemote = "127.0.0.1";
-        if (client.EndPointRemote != null &&
-            client.EndPointRemote.Address.ToString() != IPAddress.IPv6Loopback.ToString())
+        if (client.EndPointRemote != null && client.EndPointRemote.Address.ToString() != "::ffff:127.0.0.1")
         {
             endPointRemote = client.EndPointRemote.Address.ToString();
         }

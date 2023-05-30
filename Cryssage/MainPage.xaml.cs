@@ -116,15 +116,18 @@ public partial class MainPage : ContentPage
     {
         if (context.IsAnyUserSelected())
         {
-            var editorTextTrimmed = editor.Text.Trim(' ').Trim('\n').Trim('\r');
-            if (editor.Text != null && editorTextTrimmed.Length > 0)
+            if (editor.Text != null)
             {
-                var contextText = new ContextText(editorTextTrimmed);
-                var messageText = new MessageTextModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN,
-                                                       true, contextText.Text, contextText.GUID);
+                var editorTextTrimmed = editor.Text.Trim(' ').Trim('\n').Trim('\r');
+                if (editorTextTrimmed.Length > 0)
+                {
+                    var contextText = new ContextText(editorTextTrimmed);
+                    var messageText = new MessageTextModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN,
+                                                           true, contextText.Text, contextText.GUID);
 
-                context.AddUserSelectedMessage(messageText);
-                context.Send(context.GetUserSelected().Ip, contextText);
+                    context.AddUserSelectedMessage(messageText);
+                    context.Send(context.GetUserSelected().Ip, contextText);
+                }
             }
 
             foreach (var file in context.GetUserSelectedItemsFile())

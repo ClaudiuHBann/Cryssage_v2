@@ -25,11 +25,11 @@ public class Size : IValueConverter
         var measure = new[] { "B", "KB", "MB", "GB", "TB" };
         uint measureindex = 0, decimals = 0;
 
-        while (size >= 1024)
+        while (size >= 1000)
         {
             measureindex++;
             decimals = size % 1000;
-            size /= 1024;
+            size /= 1000;
         }
 
         return size.ToString() + (decimals > 0 ? "," + decimals.ToString() + " " : " ") + measure[measureindex];

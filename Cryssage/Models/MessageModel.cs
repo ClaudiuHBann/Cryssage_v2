@@ -2,13 +2,13 @@
 
 namespace Cryssage.Models
 {
-public enum MessageType
+public enum MessageType : byte
 {
     TEXT,
     FILE
 }
 
-public enum MessageState
+public enum MessageState : byte
 {
     LOADING,
     SENT,

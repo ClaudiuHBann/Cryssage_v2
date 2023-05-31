@@ -6,7 +6,7 @@ namespace Networking.Context
 {
 public class ContextProgress : IContext
 {
-    public enum Type_
+    public enum Type_ : byte
     {
         SEND,
         RECEIVE

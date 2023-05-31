@@ -25,7 +25,7 @@ public class Picker
     public static async Task<string> PickFolder()
     {
         var folder = await FolderPicker.Default.PickAsync(new());
-        return folder.Folder.Path;
+        return folder?.Folder?.Path;
     }
 }
 }

@@ -37,9 +37,7 @@ public class UDPBroadcastServerRaw
                     if (metadata.Type == Message.Type.PING && endPointRemoteIP != null &&
                         BroadcastIPFinder.GetLocalIPV4().ToString() != endPointRemoteIP.Address.ToString())
                     {
-                        Console.WriteLine($"Received broadcast from {endPointRemoteIP}...");
                         callback(endPointRemoteIP);
-                        Console.WriteLine("Sending message back...");
                         server.SendOrBroadcastToAll(args.Stream, endPointRemoteIP);
                     }
                 }

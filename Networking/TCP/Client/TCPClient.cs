@@ -110,7 +110,7 @@ namespace Networking.TCP.Client
     public void Receive(Callback callback, CallbackProgress? callbackProgress = null)
     {
         ReceiveAll(new byte[HeaderMetadata.SIZE],
-                   (argsMetadata) =>
+                   argsMetadata =>
                    {
                        if (argsMetadata.Error != SocketError.Success || argsMetadata.Stream == null)
                        {
@@ -122,8 +122,8 @@ namespace Networking.TCP.Client
                        var contextProgress =
                            IContext.CreateProgress(metadata.GUID, metadata.Size, ContextProgress.Type_.RECEIVE);
                        ReceiveAll(new byte[metadata.Size],
-                                  (argsData) => ReceiveCallback(callback, callbackProgress, contextProgress,
-                                                                argsMetadata.Stream, argsData));
+                                  argsData => ReceiveCallback(callback, callbackProgress, contextProgress,
+                                                              argsMetadata.Stream, argsData));
                    });
     }
 }

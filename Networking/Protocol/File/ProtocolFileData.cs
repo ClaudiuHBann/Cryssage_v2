@@ -1,6 +1,5 @@
-﻿using Parser.Message;
+﻿using Networking.Manager;
 
-using Networking.Manager;
 using Networking.Context.File;
 using Networking.Context.Interface;
 
@@ -19,12 +18,6 @@ namespace Networking.Protocol.File
 
     public override IContext GetNextContext(IContext context)
     {
-        // this is only for requests
-        if (context.Type != Message.Type.REQUEST)
-        {
-            return IContext.CreateError();
-        }
-
         var stream = managerFileTransfer.Read(context.GUID);
         return stream != null ? new ContextFileData(stream, context.GUID) : IContext.CreateEOS();
     }

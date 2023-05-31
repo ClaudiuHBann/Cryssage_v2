@@ -61,8 +61,6 @@ public class UDPBroadcastClient
         var message = MessageManager.ToMessage(Array.Empty<byte>(), Message.Type.PING);
         var messageBytes = MessageConverter.MessageToBytes(message);
 
-        Console.WriteLine($"Broadcasting on {new IPEndPoint(IPAddress.Parse(BroadcastIPFinder.GetBroadcastIP()),
-                                                                 Utility.PORT_UDP_BROADCAST_SERVER)}...");
         client.SendOrBroadcastToAll(messageBytes, new IPEndPoint(IPAddress.Parse(BroadcastIPFinder.GetBroadcastIP()),
                                                                  Utility.PORT_UDP_BROADCAST_SERVER));
     }

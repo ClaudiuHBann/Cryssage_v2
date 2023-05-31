@@ -24,8 +24,8 @@ public class Context : IContextHandler
         managerNetwork = new(this);
         viewUser = uv;
 
-        var userNew = new UserModel("127.0.0.1", "dotnet_bot.png", "Pulea", DateTime.MinValue, "");
-        viewUser.Items.Add(userNew);
+        /*var userNew = new UserModel("127.0.0.1", "dotnet_bot.png", "Pulea", DateTime.MinValue, "");
+        viewUser.Items.Add(userNew);*/
     }
 
     public void Send(string ip, IContext context) => managerNetwork.Send(ip, context);

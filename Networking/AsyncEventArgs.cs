@@ -5,7 +5,7 @@ namespace Networking
 {
 public class AsyncEventArgs
 {
-    public enum Type_
+    public enum Type_ : byte
     {
         UNKNOWN,   // populates context with default values
         CONNECT,   // populates context with socket error and connected

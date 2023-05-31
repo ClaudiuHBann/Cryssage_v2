@@ -1,6 +1,5 @@
 ﻿using Parser.Message;
 
-using System.Net;
 using Networking.TCP.Client;
 
 namespace Networking.TCP.Server
@@ -17,7 +16,7 @@ public class ServerProcessor
     static string GetClientEndPointRemote(TCPClient client)
     {
         string endPointRemote = "127.0.0.1";
-        if (client.EndPointRemote != null && client.EndPointRemote.Address.ToString() != "::ffff:127.0.0.1")
+        if (client.EndPointRemote != null && !client.EndPointRemote.Address.ToString().Contains("127.0.0.1"))
         {
             endPointRemote = client.EndPointRemote.Address.ToString();
         }
@@ -28,7 +27,7 @@ public class ServerProcessor
     public void Process(TCPClient client)
     {
         client.Receive(
-            (context) =>
+            context =>
             {
                 if (context.Type == Message.Type.ERROR || context.Type == Message.Type.EOS)
                 {
@@ -39,7 +38,7 @@ public class ServerProcessor
                 client.Send(Dispatcher.Dispatch(context),
                             _ => Process(client));
             },
-            (contextProgress) => Dispatcher.Dispatch(contextProgress));
+            contextProgress => Dispatcher.Dispatch(contextProgress));
     }
 }
 }

@@ -47,7 +47,7 @@ public class ServerDispatcher
         IProtocol? protocol = null;
         switch (context.Type)
         {
-        case Message.Type.REQUEST: {
+        case Message.Type.REQUEST:
             switch (((ContextRequest)context).TypeRequest)
             {
             case Message.Type.DISCOVER:
@@ -57,12 +57,7 @@ public class ServerDispatcher
                 protocol = new ProtocolFileRequest(ContextHandler, managerFileTransfer);
                 break;
             }
-
-            // process request and send response
-            protocol?.Exchange(context);
-            managerConnection.Respond(context.IP, (ContextRequest)context);
-        }
-        break;
+            break;
 
         case Message.Type.RESPONSE:
             switch (((ContextResponse)context).TypeResponse)
@@ -84,7 +79,12 @@ public class ServerDispatcher
             break;
         }
 
-        return protocol != null ? protocol.Exchange(context) : IContext.CreateError();
+        var contextResponse = protocol != null ? protocol.Exchange(context) : IContext.CreateError();
+        if (context.Type == Message.Type.REQUEST)
+        {
+            managerConnection.Respond(context.IP, (ContextRequest)context);
+        }
+        return contextResponse;
     }
 }
 }

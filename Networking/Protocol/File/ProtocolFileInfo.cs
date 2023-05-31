@@ -1,7 +1,6 @@
 ﻿using Networking.Manager;
 
 using Networking.Context;
-using Networking.Context.File;
 using Networking.Context.Interface;
 
 namespace Networking.Protocol.File
@@ -23,9 +22,7 @@ namespace Networking.Protocol.File
         {
             context.Responded = true;
 
-            var contextFileInfo = (ContextFileInfo)context;
-            managerFileTransfer.Add(
-                new ContextFileRequest(contextFileInfo.Path, contextFileInfo.Size, contextFileInfo.GUID));
+            managerFileTransfer.Add((ContextFileInfo)context);
 
             return context;
         }

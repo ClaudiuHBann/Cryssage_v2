@@ -31,5 +31,11 @@ public class ProtocolFileRequest : IProtocol
             return IContext.CreateEOS();
         }
     }
+
+    public override IContext Exchange(IContext context)
+    {
+        managerFileTransfer.Add((ContextFileRequest)context);
+        return IContext.CreateACK();
+    }
 }
 }

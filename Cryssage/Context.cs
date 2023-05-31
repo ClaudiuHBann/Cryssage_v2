@@ -21,7 +21,7 @@ public class Context : IContextHandler
 
     public Context(UserView uv)
     {
-        managerNetwork = new(this);
+        managerNetwork = new(this, new());
         viewUser = uv;
 
         /*var userNew = new UserModel("127.0.0.1", "dotnet_bot.png", "Pulea", DateTime.MinValue, "");

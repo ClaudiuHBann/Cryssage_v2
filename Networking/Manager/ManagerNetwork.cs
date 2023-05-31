@@ -1,15 +1,16 @@
-﻿using Networking.Context.Interface;
+﻿using Networking.Context;
+using Networking.Context.Interface;
 
 namespace Networking.Manager
 {
-    public class ManagerNetwork
+public class ManagerNetwork
 {
     readonly ManagerTCP ManagerTCP;
     readonly ManagerBroadcast ManagerBroadcast;
 
-    public ManagerNetwork(IContextHandler iContextHandler)
+    public ManagerNetwork(IContextHandler iContextHandler, List<ContextFileInfo> contextFileInfos)
     {
-        ManagerTCP = new(iContextHandler);
+        ManagerTCP = new(iContextHandler, contextFileInfos);
         ManagerBroadcast = new(ManagerTCP.ManagerConnection);
     }
 

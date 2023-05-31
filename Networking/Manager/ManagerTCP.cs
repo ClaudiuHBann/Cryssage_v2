@@ -1,4 +1,6 @@
-﻿using Networking.TCP.Client;
+﻿using Networking.Context;
+
+using Networking.TCP.Client;
 using Networking.TCP.Server;
 
 namespace Networking.Manager
@@ -15,9 +17,9 @@ public class ManagerTCP
     readonly ServerDispatcher dispatcherServer;
     readonly ServerProcessor processorServer;
 
-    public ManagerTCP(IContextHandler iContextHandler)
+    public ManagerTCP(IContextHandler iContextHandler, List<ContextFileInfo> contextFileInfos)
     {
-        managerFileTransfer = new();
+        managerFileTransfer = new(contextFileInfos);
 
         dispatcherClient = new(iContextHandler, managerFileTransfer);
         processorClient = new(dispatcherClient);

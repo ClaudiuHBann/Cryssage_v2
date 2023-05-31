@@ -28,6 +28,6 @@ namespace Networking.Protocol
     }
 
     // for server
-    public virtual IContext Exchange(IContext context) => IContext.CreateACK();
+    public abstract IContext Exchange(IContext context);
 }
 }

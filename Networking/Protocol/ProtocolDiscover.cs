@@ -1,5 +1,4 @@
-﻿using Parser.Message;
-using Networking.Context.Discover;
+﻿using Networking.Context.Discover;
 using Networking.Context.Interface;
 
 namespace Networking.Protocol
@@ -13,18 +12,9 @@ namespace Networking.Protocol
 
     public override IContext GetNextContext(IContext context)
     {
-        // this is only for requests
-        if (context.Type != Message.Type.REQUEST)
+        if (!context.Responded)
         {
-            return IContext.CreateError();
-        }
-
-        // if we didn't responded we respond and keep that in mind
-        // else we send the end of stream context
-        var contextRequest = (ContextRequest)context;
-        if (!contextRequest.Responded)
-        {
-            contextRequest.Responded = true;
+            context.Responded = true;
             return new ContextDiscover(Environment.MachineName);
         }
         else

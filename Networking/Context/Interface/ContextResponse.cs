@@ -4,11 +4,11 @@ namespace Networking.Context.Interface
 {
 public class ContextResponse : IContext
 {
-    public Message.Type TypeRespond { get; set; }
+    public Message.Type TypeResponse { get; set; }
 
     public ContextResponse(Message.Type type, Guid guid) : base(Message.Type.RESPONSE, guid)
     {
-        TypeRespond = type;
+        TypeResponse = type;
     }
 }
 }

@@ -18,6 +18,13 @@ public class IContext
     public Message.Type Type { get; set; } = Message.Type.UNKNOWN;
     // the guid of the message
     public Guid GUID { get; set; } = Guid.Empty;
+    // the request or context to send was handled
+    public bool Responded { get; set; } = false;
+
+    // used by json deserializer
+    public IContext()
+    {
+    }
 
     // Use implicitly by derived classes
     protected IContext(Message.Type type, Guid guid)
@@ -35,7 +42,7 @@ public class IContext
             var jsonStr = Utility.ENCODING_DEFAULT.GetString(stream);
             var jsonObject = JObject.Parse(jsonStr);
 
-            switch (jsonObject["TypeRequest"]?.Value<Message.Type>())
+            switch ((Message.Type?)jsonObject["TypeRequest"]?.Value<long>())
             {
             case Message.Type.DISCOVER:
                 return JsonConvert.DeserializeObject<ContextDiscoverRequest>(jsonStr);
@@ -51,7 +58,7 @@ public class IContext
             var jsonStr = Utility.ENCODING_DEFAULT.GetString(stream);
             var jsonObject = JObject.Parse(jsonStr);
 
-            switch (jsonObject["TypeResponse"]?.Value<Message.Type>())
+            switch ((Message.Type?)jsonObject["TypeResponse"]?.Value<long>())
             {
             case Message.Type.DISCOVER:
                 return JsonConvert.DeserializeObject<ContextDiscover>(Utility.ENCODING_DEFAULT.GetString(stream));
@@ -68,6 +75,11 @@ public class IContext
             return JsonConvert.DeserializeObject<ContextText>(Utility.ENCODING_DEFAULT.GetString(stream));
         case Message.Type.FILE_INFO:
             return JsonConvert.DeserializeObject<ContextFileInfo>(Utility.ENCODING_DEFAULT.GetString(stream));
+
+        case Message.Type.ACK:
+        case Message.Type.ERROR:
+        case Message.Type.EOS:
+            return JsonConvert.DeserializeObject<IContext>(Utility.ENCODING_DEFAULT.GetString(stream));
 
         default:
             return null;
@@ -104,7 +116,7 @@ public class IContext
             }
 
         case Message.Type.RESPONSE:
-            switch (((ContextResponse)this).TypeRespond)
+            switch (((ContextResponse)this).TypeResponse)
             {
             case Message.Type.DISCOVER:
                 return Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject((ContextDiscover)this));

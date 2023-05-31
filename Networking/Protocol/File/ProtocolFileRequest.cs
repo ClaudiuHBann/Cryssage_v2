@@ -1,10 +1,11 @@
 ﻿using Networking.Manager;
+
 using Networking.Context.File;
 using Networking.Context.Interface;
 
 namespace Networking.Protocol.File
 {
-    public class ProtocolFileRequest : IProtocol
+public class ProtocolFileRequest : IProtocol
 {
     readonly ManagerFileTransfer managerFileTransfer;
 
@@ -17,14 +18,18 @@ namespace Networking.Protocol.File
 
     public override IContext GetNextContext(IContext context)
     {
-        managerFileTransfer.Add((ContextFileRequest)context);
-        return base.GetNextContext(context);
-    }
+        if (!context.Responded)
+        {
+            context.Responded = true;
 
-    public override IContext Exchange(IContext context)
-    {
-        managerFileTransfer.Add((ContextFileRequest)context);
-        return IContext.CreateACK();
+            managerFileTransfer.Add((ContextFileRequest)context);
+
+            return context;
+        }
+        else
+        {
+            return IContext.CreateEOS();
+        }
     }
 }
 }

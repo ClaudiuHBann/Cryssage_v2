@@ -82,10 +82,8 @@ public partial class MainPage : ContentPage
         foreach (var file in files)
         {
             var fileSize = (uint) new FileInfo(file.FullPath).Length;
-            var contextFileInfo = new ContextFileInfo(file.FullPath, fileSize);
-
             var message = new MessageFileModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN, true,
-                                               "dotnet_bot.png", file.FullPath, fileSize, contextFileInfo.GUID);
+                                               "dotnet_bot.png", file.FullPath, fileSize, Guid.NewGuid());
 
             AddUserSelectedFile(message);
         }
@@ -137,7 +135,7 @@ public partial class MainPage : ContentPage
 
                 context.AddUserSelectedMessage(messageFile);
                 context.Send(context.GetUserSelected().Ip,
-                             new ContextFileInfo(file.FilePath, file.Size, DateTime.UtcNow));
+                             new ContextFileInfo(file.FilePath, file.Size, DateTime.UtcNow, messageFile.Guid));
             }
         }
 

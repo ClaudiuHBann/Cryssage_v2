@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+
 using Networking.Context.File;
 
 namespace Networking.Manager
@@ -13,8 +14,21 @@ public class ManagerFileTransfer
     {
     }
 
-    public void Add(ContextFileRequest contextRequestFile) => fileGUIDToLocalFilePaths[contextRequestFile.GUID] =
-        new(contextRequestFile.Path, contextRequestFile.Size, contextRequestFile.Index);
+    public void Add(ContextFileRequest contextRequestFile)
+    {
+        // dont update file path
+        if (fileGUIDToLocalFilePaths.ContainsKey(contextRequestFile.GUID))
+        {
+            fileGUIDToLocalFilePaths[contextRequestFile.GUID] =
+                new(fileGUIDToLocalFilePaths[contextRequestFile.GUID].filePath, contextRequestFile.Size,
+                    contextRequestFile.Index);
+        }
+        else
+        {
+            fileGUIDToLocalFilePaths[contextRequestFile.GUID] =
+                new(contextRequestFile.Path, contextRequestFile.Size, contextRequestFile.Index);
+        }
+    }
 
     void Remove(Guid fileGUID)
     {
@@ -26,8 +40,7 @@ public class ManagerFileTransfer
 
     public bool Write(Guid fileGUID, byte[] stream)
     {
-        if (!fileGUIDToLocalFilePaths.ContainsKey(fileGUID) ||
-            !File.Exists(fileGUIDToLocalFilePaths[fileGUID].filePath))
+        if (!fileGUIDToLocalFilePaths.ContainsKey(fileGUID))
         {
             return false;
         }
@@ -57,20 +70,22 @@ public class ManagerFileTransfer
         }
 
         // open file stream and create buffer
-        using var streamFile = new FileStream(fileGUIDToLocalFilePaths[fileGUID].filePath, FileMode.Open);
+        using var streamFile =
+            new FileStream(fileGUIDToLocalFilePaths[fileGUID].filePath, FileMode.Open, FileAccess.Read);
         var stream = new byte[Utility.FILE_CHUNK_SIZE];
 
         // read from file stream to the buffer and resize the buffer
+        streamFile.Seek(-fileGUIDToLocalFilePaths[fileGUID].fileIndex, SeekOrigin.End);
         var bytesReadCount = streamFile.Read(stream, 0, stream.Length);
         Array.Resize(ref stream, bytesReadCount);
 
         // update the file index
         fileGUIDToLocalFilePaths[fileGUID] =
             new(fileGUIDToLocalFilePaths[fileGUID].filePath, fileGUIDToLocalFilePaths[fileGUID].fileSize,
-                fileGUIDToLocalFilePaths[fileGUID].fileIndex + (uint)bytesReadCount);
+                fileGUIDToLocalFilePaths[fileGUID].fileIndex - (uint)bytesReadCount);
 
         // file finished reading, remove from cache
-        if (bytesReadCount == 0)
+        if (fileGUIDToLocalFilePaths[fileGUID].fileIndex == 0)
         {
             Remove(fileGUID);
         }

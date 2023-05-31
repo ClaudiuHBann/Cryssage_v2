@@ -12,8 +12,8 @@ public class ContextFileInfo : IContext
     public uint Size { get; set; }
     public DateTime DateTime { get; set; }
 
-    public ContextFileInfo(string path, uint size, DateTime? dateTime = null)
-        : base(Message.Type.FILE_INFO, Guid.NewGuid())
+    public ContextFileInfo(string path, uint size, DateTime? dateTime = null, Guid? guid = null)
+        : base(Message.Type.FILE_INFO, guid ?? Guid.NewGuid())
     {
         Path = path;
         Size = size;

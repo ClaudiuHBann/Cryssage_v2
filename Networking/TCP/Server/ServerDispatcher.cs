@@ -47,20 +47,25 @@ public class ServerDispatcher
         IProtocol? protocol = null;
         switch (context.Type)
         {
-        case Message.Type.REQUEST:
+        case Message.Type.REQUEST: {
             switch (((ContextRequest)context).TypeRequest)
             {
             case Message.Type.DISCOVER:
-                protocol = new ProtocolDiscover(ContextHandler);
+                // we don't need to process the discover message
                 break;
             case Message.Type.FILE:
                 protocol = new ProtocolFileRequest(ContextHandler, managerFileTransfer);
                 break;
             }
-            break;
+
+            // process request and send response
+            protocol?.Exchange(context);
+            managerConnection.Respond(context.IP, (ContextRequest)context);
+        }
+        break;
 
         case Message.Type.RESPONSE:
-            switch (((ContextResponse)context).TypeRespond)
+            switch (((ContextResponse)context).TypeResponse)
             {
             case Message.Type.DISCOVER:
                 protocol = new ProtocolDiscover(ContextHandler);
@@ -75,19 +80,11 @@ public class ServerDispatcher
             protocol = new ProtocolText(ContextHandler);
             break;
         case Message.Type.FILE_INFO:
-            protocol = new ProtocolFileInfo(ContextHandler);
+            protocol = new ProtocolFileInfo(ContextHandler, managerFileTransfer);
             break;
         }
 
-        var contextExchange = protocol != null ? protocol.Exchange(context) : IContext.CreateError();
-        // we received a request so we create a client to send the requested data
-        if (context.Type == Message.Type.REQUEST && protocol != null && contextExchange.Type != Message.Type.ERROR)
-        {
-            // provide the request and start sending the response
-            managerConnection.Send(context.IP, contextExchange);
-        }
-
-        return contextExchange;
+        return protocol != null ? protocol.Exchange(context) : IContext.CreateError();
     }
 }
 }

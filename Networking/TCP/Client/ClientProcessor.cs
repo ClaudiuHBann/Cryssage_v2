@@ -14,20 +14,26 @@ public class ClientProcessor
 
     public void ProcessSend(TCPClient client, IContext context)
     {
-        // we send the context and get the next context from the dispatcher
-        client.Send(context,
+        var contextReponse = Dispatcher.Dispatch(context);
+        client.Send(contextReponse,
                     contextProgress =>
                     {
+                        // if we sent EOS stop
+                        if (contextReponse.Type == Message.Type.EOS)
+                        {
+                            return;
+                        }
+
                         Dispatcher.Dispatch(contextProgress);
 
-                        client.Receive((context) =>
+                        client.Receive(contextR =>
                                        {
-                                           if (context.Type == Message.Type.ERROR)
+                                           if (contextR.Type == Message.Type.ERROR)
                                            {
                                                return;
                                            }
 
-                                           ProcessSend(client, Dispatcher.Dispatch(context));
+                                           ProcessSend(client, context);
                                        });
                     },
                     contextProgress => Dispatcher.Dispatch(contextProgress));
@@ -35,10 +41,16 @@ public class ClientProcessor
 
     public void ProcessResponse(TCPClient client, ContextRequest contextRequest)
     {
-        // we get the context from the dispatcher and send it
-        client.Send(Dispatcher.DispatchResponse(contextRequest),
+        var contextReponse = Dispatcher.DispatchResponse(contextRequest);
+        client.Send(contextReponse,
                     contextProgress =>
                     {
+                        // if we sent EOS stop
+                        if (contextReponse.Type == Message.Type.EOS)
+                        {
+                            return;
+                        }
+
                         Dispatcher.DispatchResponse(contextProgress);
 
                         client.Receive(context =>
@@ -48,6 +60,7 @@ public class ClientProcessor
                                                return;
                                            }
 
+                                           // process with the same context request
                                            ProcessResponse(client, contextRequest);
                                        });
                     },

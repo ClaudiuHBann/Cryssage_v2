@@ -62,7 +62,7 @@ public class ClientDispatcher
             protocol = new ProtocolText(ContextHandler);
             break;
         case Message.Type.FILE_INFO:
-            protocol = new ProtocolFileInfo(ContextHandler);
+            protocol = new ProtocolFileInfo(ContextHandler, managerFileTransfer);
             break;
         }
 

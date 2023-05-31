@@ -14,15 +14,9 @@ public class ManagerConnection
         this.processor = processor;
     }
 
+    // used for sending request or text of things like that
     public void Send(string ip, IContext context)
     {
-        // sent by the server and it's handled by the respond logic
-        if (context.Type == Message.Type.REQUEST)
-        {
-            Respond(ip, (ContextRequest)context);
-            return;
-        }
-
         TCPClient client = new();
         client.Connect(ip, Utility.PORT_TCP,
                        (args) =>
@@ -37,7 +31,7 @@ public class ManagerConnection
     }
 
     // this is used only by the server to respond to the requests
-    void Respond(string ip, ContextRequest contextRequest)
+    public void Respond(string ip, ContextRequest contextRequest)
     {
         TCPClient client = new();
         client.Connect(ip, Utility.PORT_TCP,

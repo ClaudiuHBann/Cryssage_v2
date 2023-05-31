@@ -11,7 +11,23 @@ namespace Networking.Protocol
         ContextHandler = contextHandler;
     }
 
-    public virtual IContext GetNextContext(IContext context) => IContext.CreateEOS();
-    public abstract IContext Exchange(IContext context);
+    // for client
+    // some of them are provided a request to respond to them
+    // some of them are provided the context to be send
+    public virtual IContext GetNextContext(IContext context)
+    {
+        if (!context.Responded)
+        {
+            context.Responded = true;
+            return context;
+        }
+        else
+        {
+            return IContext.CreateEOS();
+        }
+    }
+
+    // for server
+    public virtual IContext Exchange(IContext context) => IContext.CreateACK();
 }
 }

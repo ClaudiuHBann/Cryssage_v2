@@ -15,5 +15,7 @@ public class ContextFileData : IContext
     {
         Stream = stream;
     }
+
+    public override byte[] ToStream() => Stream;
 }
 }

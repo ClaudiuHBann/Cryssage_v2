@@ -4,11 +4,11 @@ using Newtonsoft.Json;
 
 using Networking.Context.Interface;
 
-namespace Networking.Context.Request
+namespace Networking.Context.Response
 {
-public class ContextDiscoverRequest : ContextRequest
+public class ContextEOS : IContext
 {
-    public ContextDiscoverRequest() : base(Message.Type.DISCOVER, Guid.NewGuid())
+    public ContextEOS() : base(Message.Type.EOS, Guid.NewGuid())
     {
     }
 

@@ -1,5 +1,7 @@
 ﻿using Parser.Message;
 
+using Newtonsoft.Json;
+
 using Networking.Context.Interface;
 
 namespace Networking.Context.File
@@ -8,8 +10,13 @@ public class ContextFileRequest : ContextRequest
 {
     // local file path where the file will be downloaded
     public string Path { get; set; }
+
+    [JsonIgnore]
     // the size of the remote file
-    public uint Size { get; set; }
+    public uint Size {
+        get; set;
+    }
+
     // the size of the local file
     public uint Index { get; set; } = 0;
 
@@ -24,5 +31,7 @@ public class ContextFileRequest : ContextRequest
             Index = (uint) new FileInfo(path).Length;
         }
     }
+
+    public override byte[] ToStream() => Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject(this));
 }
 }

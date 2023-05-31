@@ -1,6 +1,7 @@
 ﻿using Networking.Manager;
 
 using Networking.Context.File;
+using Networking.Context.Response;
 using Networking.Context.Interface;
 
 namespace Networking.Protocol.File
@@ -28,14 +29,14 @@ public class ProtocolFileRequest : IProtocol
         }
         else
         {
-            return IContext.CreateEOS();
+            return new ContextEOS();
         }
     }
 
     public override IContext Exchange(IContext context)
     {
         managerFileTransfer.Add((ContextFileRequest)context);
-        return IContext.CreateACK();
+        return new ContextACK();
     }
 }
 }

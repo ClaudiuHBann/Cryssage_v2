@@ -10,5 +10,9 @@ public class ContextRequest : IContext
     {
         TypeRequest = type;
     }
+
+    // this method is used for sending data
+    public override byte[] ToStream() =>
+        throw new NotSupportedException($"A {nameof(ContextProgress)} should not be sent!");
 }
 }

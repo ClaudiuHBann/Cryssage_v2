@@ -1,6 +1,7 @@
 ﻿using Networking.Manager;
 
 using Networking.Context.File;
+using Networking.Context.Response;
 using Networking.Context.Interface;
 
 namespace Networking.Protocol.File
@@ -19,14 +20,14 @@ namespace Networking.Protocol.File
     public override IContext GetNextContext(IContext context)
     {
         var stream = managerFileTransfer.Read(context.GUID);
-        return stream != null ? new ContextFileData(stream, context.GUID) : IContext.CreateEOS();
+        return stream != null ? new ContextFileData(stream, context.GUID) : new ContextEOS();
     }
 
     public override IContext Exchange(IContext context)
     {
         var contextFileData = (ContextFileData)context;
-        return managerFileTransfer.Write(contextFileData.GUID, contextFileData.Stream) ? IContext.CreateACK()
-                                                                                       : IContext.CreateError();
+        return managerFileTransfer.Write(contextFileData.GUID, contextFileData.Stream) ? new ContextACK()
+                                                                                       : new ContextError();
     }
 }
 }

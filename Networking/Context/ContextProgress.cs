@@ -12,11 +12,13 @@ public class ContextProgress : IContext
         RECEIVE
     }
 
+    public Type_ TypeProgress { get; set; }
+
     public uint Current { get; set; } = 0;
     public uint Total { get; set; } = 0;
+
     public float Percentage { get; set; } = 0f;
     public bool Done => MathF.Ceiling(Percentage) == 100;
-    public Type_ TypeProgress { get; set; }
 
     public ContextProgress(Type_ type, uint total, Guid guid) : base(Message.Type.PROGRESS, guid)
     {
@@ -31,5 +33,9 @@ public class ContextProgress : IContext
 
         return Percentage;
     }
+
+    // this method is used for sending data
+    public override byte[] ToStream() =>
+        throw new NotSupportedException($"A {nameof(ContextProgress)} should not be sent!");
 }
 }

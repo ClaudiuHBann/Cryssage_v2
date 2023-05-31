@@ -1,4 +1,5 @@
 ﻿using Networking.Context;
+using Networking.Context.Response;
 using Networking.Context.Interface;
 
 namespace Networking.Protocol
@@ -13,7 +14,7 @@ namespace Networking.Protocol
     public override IContext Exchange(IContext context)
     {
         ContextHandler.OnReceiveText((ContextText)context);
-        return IContext.CreateACK();
+        return new ContextACK();
     }
 }
 }

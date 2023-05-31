@@ -1,4 +1,5 @@
 ﻿using Parser.Message;
+
 using Networking.Context.Interface;
 
 namespace Networking.TCP.Client
@@ -24,7 +25,10 @@ public class ClientProcessor
                             return;
                         }
 
-                        Dispatcher.Dispatch(contextProgress);
+                        if (contextReponse.HasProgress)
+                        {
+                            Dispatcher.Dispatch(contextProgress);
+                        }
 
                         client.Receive(contextR =>
                                        {
@@ -36,7 +40,13 @@ public class ClientProcessor
                                            ProcessSend(client, context);
                                        });
                     },
-                    contextProgress => Dispatcher.Dispatch(contextProgress));
+                    contextProgress =>
+                    {
+                        if (contextReponse.HasProgress)
+                        {
+                            Dispatcher.Dispatch(contextProgress);
+                        }
+                    });
     }
 
     public void ProcessResponse(TCPClient client, ContextRequest contextRequest)
@@ -51,7 +61,10 @@ public class ClientProcessor
                             return;
                         }
 
-                        Dispatcher.DispatchResponse(contextProgress);
+                        if (contextReponse.HasProgress)
+                        {
+                            Dispatcher.DispatchResponse(contextProgress);
+                        }
 
                         client.Receive(context =>
                                        {
@@ -64,7 +77,13 @@ public class ClientProcessor
                                            ProcessResponse(client, contextRequest);
                                        });
                     },
-                    contextProgress => Dispatcher.DispatchResponse(contextProgress));
+                    contextProgress =>
+                    {
+                        if (contextReponse.HasProgress)
+                        {
+                            Dispatcher.DispatchResponse(contextProgress);
+                        }
+                    });
     }
 }
 }

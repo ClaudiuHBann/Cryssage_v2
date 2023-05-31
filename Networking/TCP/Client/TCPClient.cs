@@ -56,10 +56,7 @@ namespace Networking.TCP.Client
         var messageBytes = MessageConverter.MessageToBytes(message);
 
         // create the context progress
-        // TODO: watchout, the total bytes are the underlying message size
-        var contextProgress =
-            IContext.CreateProgress(context.GUID, (uint)messageBytes.Length, ContextProgress.Type_.SEND);
-
+        var contextProgress = new ContextProgress(ContextProgress.Type_.SEND, (uint)messageBytes.Length, context.GUID);
         SendAll(messageBytes, (args) => SendCallback(callback, callbackProgress, contextProgress, args));
     }
 
@@ -118,9 +115,8 @@ namespace Networking.TCP.Client
                        }
 
                        var metadata = MessageConverter.BytesToHeaderMetadata(argsMetadata.Stream);
-                       // TODO: watchout, the total bytes are the underlying message size
                        var contextProgress =
-                           IContext.CreateProgress(metadata.GUID, metadata.Size, ContextProgress.Type_.RECEIVE);
+                           new ContextProgress(ContextProgress.Type_.RECEIVE, metadata.Size, metadata.GUID);
                        ReceiveAll(new byte[metadata.Size],
                                   argsData => ReceiveCallback(callback, callbackProgress, contextProgress,
                                                               argsMetadata.Stream, argsData));

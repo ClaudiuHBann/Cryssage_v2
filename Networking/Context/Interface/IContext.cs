@@ -6,20 +6,29 @@ using Newtonsoft.Json.Linq;
 using Networking.Context.File;
 using Networking.Context.Request;
 using Networking.Context.Discover;
+using Networking.Context.Response;
 
 namespace Networking.Context.Interface
 {
 // Base class for every receive context and that class used for sending context
-public class IContext
+public abstract class IContext
 {
+    [JsonIgnore]
     // this is set when a context is received in the server processor
     public string IP { get; set; } = "127.0.0.1";
+
     // the type of the context is the same as the message type
     public Message.Type Type { get; set; } = Message.Type.UNKNOWN;
+
     // the guid of the message
     public Guid GUID { get; set; } = Guid.Empty;
+
+    [JsonIgnore]
     // the request or context to send was handled
     public bool Responded { get; set; } = false;
+
+    [JsonIgnore]
+    public bool HasProgress { get; set; } = false;
 
     // used by json deserializer
     public IContext()
@@ -27,13 +36,16 @@ public class IContext
     }
 
     // Use implicitly by derived classes
-    protected IContext(Message.Type type, Guid guid)
+    protected IContext(Message.Type type, Guid guid, bool hasProgress = false)
     {
         Type = type;
         GUID = guid;
+        HasProgress = hasProgress;
     }
 
-    // used for real data
+    public abstract byte[] ToStream();
+
+    // not an abstract method because c#'s 'this' is readonly and we cannot initialize ourself in the constructor
     public static IContext? Create(Message.Type type, Guid guid, byte[] stream)
     {
         switch (type)
@@ -42,7 +54,7 @@ public class IContext
             var jsonStr = Utility.ENCODING_DEFAULT.GetString(stream);
             var jsonObject = JObject.Parse(jsonStr);
 
-            switch ((Message.Type?)jsonObject["TypeRequest"]?.Value<long>())
+            switch ((Message.Type?)jsonObject[nameof(ContextRequest.TypeRequest)]?.Value<long>())
             {
             case Message.Type.DISCOVER:
                 return JsonConvert.DeserializeObject<ContextDiscoverRequest>(jsonStr);
@@ -58,7 +70,7 @@ public class IContext
             var jsonStr = Utility.ENCODING_DEFAULT.GetString(stream);
             var jsonObject = JObject.Parse(jsonStr);
 
-            switch ((Message.Type?)jsonObject["TypeResponse"]?.Value<long>())
+            switch ((Message.Type?)jsonObject[nameof(ContextResponse.TypeResponse)]?.Value<long>())
             {
             case Message.Type.DISCOVER:
                 return JsonConvert.DeserializeObject<ContextDiscover>(Utility.ENCODING_DEFAULT.GetString(stream));
@@ -67,78 +79,26 @@ public class IContext
                 return null;
             }
         }
-
+            // the file response is just the stream of data for speed
         case Message.Type.FILE_DATA:
             return new ContextFileData(stream, guid);
 
+            // simple messages
         case Message.Type.TEXT:
             return JsonConvert.DeserializeObject<ContextText>(Utility.ENCODING_DEFAULT.GetString(stream));
         case Message.Type.FILE_INFO:
             return JsonConvert.DeserializeObject<ContextFileInfo>(Utility.ENCODING_DEFAULT.GetString(stream));
 
+            // responses
         case Message.Type.ACK:
+            return JsonConvert.DeserializeObject<ContextACK>(Utility.ENCODING_DEFAULT.GetString(stream));
         case Message.Type.ERROR:
+            return JsonConvert.DeserializeObject<ContextError>(Utility.ENCODING_DEFAULT.GetString(stream));
         case Message.Type.EOS:
-            return JsonConvert.DeserializeObject<IContext>(Utility.ENCODING_DEFAULT.GetString(stream));
+            return JsonConvert.DeserializeObject<ContextEOS>(Utility.ENCODING_DEFAULT.GetString(stream));
 
         default:
             return null;
-        }
-    }
-
-    // Used for progress context
-    public static ContextProgress CreateProgress(Guid guid, uint total, ContextProgress.Type_ type) => new(type, total,
-                                                                                                           guid);
-
-    // Used for error context
-    public static IContext CreateError() => new(Message.Type.ERROR, Guid.NewGuid());
-
-    // Used for ack context
-    public static IContext CreateACK() => new(Message.Type.ACK, Guid.NewGuid());
-
-    // Used for end of stream context
-    public static IContext CreateEOS() => new(Message.Type.EOS, Guid.NewGuid());
-
-    public byte[] ToStream()
-    {
-        switch (Type)
-        {
-        case Message.Type.REQUEST:
-            switch (((ContextRequest)this).TypeRequest)
-            {
-            case Message.Type.DISCOVER:
-                return Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject((ContextDiscoverRequest)this));
-            case Message.Type.FILE:
-                return Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject((ContextFileRequest)this));
-
-            default:
-                return Array.Empty<byte>();
-            }
-
-        case Message.Type.RESPONSE:
-            switch (((ContextResponse)this).TypeResponse)
-            {
-            case Message.Type.DISCOVER:
-                return Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject((ContextDiscover)this));
-
-            default:
-                return Array.Empty<byte>();
-            }
-        case Message.Type.FILE_DATA:
-            return ((ContextFileData)this).Stream;
-
-        case Message.Type.TEXT:
-            return Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject((ContextText)this));
-        case Message.Type.FILE_INFO:
-            return Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject((ContextFileInfo)this));
-
-        case Message.Type.ACK:
-        case Message.Type.ERROR:
-        case Message.Type.EOS:
-            return Utility.ENCODING_DEFAULT.GetBytes(JsonConvert.SerializeObject(this));
-
-        default:
-            return Array.Empty<byte>();
         }
     }
 }

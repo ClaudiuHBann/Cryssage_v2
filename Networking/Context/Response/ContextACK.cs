@@ -4,11 +4,11 @@ using Newtonsoft.Json;
 
 using Networking.Context.Interface;
 
-namespace Networking.Context.Request
+namespace Networking.Context.Response
 {
-public class ContextDiscoverRequest : ContextRequest
+public class ContextACK : IContext
 {
-    public ContextDiscoverRequest() : base(Message.Type.DISCOVER, Guid.NewGuid())
+    public ContextACK() : base(Message.Type.ACK, Guid.NewGuid())
     {
     }
 

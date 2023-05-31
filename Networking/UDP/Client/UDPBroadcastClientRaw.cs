@@ -50,7 +50,6 @@ public class UDPBroadcastClientRaw
             }
             else
             {
-                // TODO: why on fail we give back the buffer
                 args.SetBuffer(args.Buffer, 0, (int)bytesTransferredTotal);
                 ((Callback?)args.UserToken)
                     ?.Invoke(new AsyncEventArgs(args.SocketError, args.Buffer, args.RemoteEndPoint, true));

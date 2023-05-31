@@ -23,10 +23,16 @@ public class ManagerFileTransfer
         }
     }
 
+    readonly IContextHandler contextHandler;
+
     // file guid and our file path (to read and write depends) with index and size
     readonly ConcurrentDictionary<Guid, FileInfo> fileGUIDToLocalFilePaths = new();
 
-    public ManagerFileTransfer(List<ContextFileInfo> contextFileInfos) => contextFileInfos.ForEach(Add);
+    public ManagerFileTransfer(IContextHandler contextHandler, List<ContextFileInfo> contextFileInfos)
+    {
+        this.contextHandler = contextHandler;
+        contextFileInfos.ForEach(Add);
+    }
 
     public void Add(ContextFileInfo contextFileInfo)
     {
@@ -70,8 +76,12 @@ public class ManagerFileTransfer
         using var streamFile = new FileStream(fileGUIDToLocalFilePaths[fileGUID].Path, FileMode.Append);
         streamFile.Write(stream, 0, stream.Length);
 
-        // update file index
+        // update the file index and invoke receive progress event
         fileGUIDToLocalFilePaths[fileGUID].Index += (uint)stream.Length;
+        var contextProgress =
+            new ContextProgress(ContextProgress.Type_.RECEIVE, fileGUIDToLocalFilePaths[fileGUID].Size, fileGUID);
+        contextProgress.SetPercentage(fileGUIDToLocalFilePaths[fileGUID].Index);
+        contextHandler.OnReceiveProgress(contextProgress);
 
         return true;
     }
@@ -93,8 +103,12 @@ public class ManagerFileTransfer
         var bytesReadCount = streamFile.Read(stream, 0, stream.Length);
         Array.Resize(ref stream, bytesReadCount);
 
-        // update the file index
+        // update the file index and invoke send progress event
         fileGUIDToLocalFilePaths[fileGUID].Index += (uint)bytesReadCount;
+        var contextProgress =
+            new ContextProgress(ContextProgress.Type_.SEND, fileGUIDToLocalFilePaths[fileGUID].Size, fileGUID);
+        contextProgress.SetPercentage(fileGUIDToLocalFilePaths[fileGUID].Index);
+        contextHandler.OnSendProgress(contextProgress);
 
         return stream;
     }

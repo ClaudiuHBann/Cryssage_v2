@@ -1,4 +1,5 @@
 ﻿using Networking.Context.Discover;
+using Networking.Context.Response;
 using Networking.Context.Interface;
 
 namespace Networking.Protocol
@@ -19,14 +20,14 @@ namespace Networking.Protocol
         }
         else
         {
-            return IContext.CreateEOS();
+            return new ContextEOS();
         }
     }
 
     public override IContext Exchange(IContext context)
     {
         ContextHandler.OnDiscover((ContextDiscover)context);
-        return IContext.CreateACK();
+        return new ContextACK();
     }
 }
 }

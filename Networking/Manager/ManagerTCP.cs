@@ -19,7 +19,7 @@ public class ManagerTCP
 
     public ManagerTCP(IContextHandler iContextHandler, List<ContextFileInfo> contextFileInfos)
     {
-        managerFileTransfer = new(contextFileInfos);
+        managerFileTransfer = new(iContextHandler, contextFileInfos);
 
         dispatcherClient = new(iContextHandler, managerFileTransfer);
         processorClient = new(dispatcherClient);

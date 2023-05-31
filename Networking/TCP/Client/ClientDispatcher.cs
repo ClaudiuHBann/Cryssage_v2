@@ -7,39 +7,31 @@ using Networking.Context.Interface;
 
 using Networking.Protocol;
 using Networking.Protocol.File;
+using Networking.Context.Response;
 
 namespace Networking.TCP.Client
 {
-public class ClientDispatcher
+public class ClientDispatcher : IDispatcher
 {
     public IContextHandler ContextHandler { get; set; }
     readonly ManagerFileTransfer managerFileTransfer;
 
     public ClientDispatcher(IContextHandler contextHandler, ManagerFileTransfer managerFileTransfer)
+        : base(contextHandler)
     {
         ContextHandler = contextHandler;
         this.managerFileTransfer = managerFileTransfer;
     }
 
-    IContext DispatchProgress(ContextProgress contextProgress)
-    {
-        // the client will send amounts of data and needs to invoke progress
-        // the client receives just a ack or error so no progress for receiving
-        if (contextProgress.TypeProgress == ContextProgress.Type_.SEND)
-        {
-            ContextHandler.OnSendProgress(contextProgress);
-        }
-
-        // this context shouldn't be send
-        return IContext.CreateError();
-    }
-
     // dispatches sending requests and basic messages
-    public IContext Dispatch(IContext context)
+    public override IContext Dispatch(IContext context)
     {
         if (context.Type == Message.Type.PROGRESS)
         {
-            return DispatchProgress((ContextProgress)context);
+            DispatchProgress((ContextProgress)context);
+
+            // this context shouldn't be send
+            return new ContextError();
         }
 
         IProtocol? protocol = null;
@@ -66,7 +58,7 @@ public class ClientDispatcher
             break;
         }
 
-        return protocol != null ? protocol.GetNextContext(context) : IContext.CreateError();
+        return protocol != null ? protocol.GetNextContext(context) : new ContextError();
     }
 
     // dispatches responses to requests
@@ -74,7 +66,10 @@ public class ClientDispatcher
     {
         if (context.Type == Message.Type.PROGRESS)
         {
-            return DispatchProgress((ContextProgress)context);
+            DispatchProgress((ContextProgress)context);
+
+            // this context shouldn't be send
+            return new ContextError();
         }
 
         // not the first check because dispatchers need to handle progress contexts too
@@ -82,7 +77,7 @@ public class ClientDispatcher
         // here and isn't a request we return an error
         if (context.Type != Message.Type.REQUEST)
         {
-            return IContext.CreateError();
+            return new ContextError();
         }
 
         IProtocol? protocol = null;
@@ -96,7 +91,7 @@ public class ClientDispatcher
             break;
         }
 
-        return protocol != null ? protocol.GetNextContext(context) : IContext.CreateError();
+        return protocol != null ? protocol.GetNextContext(context) : new ContextError();
     }
 }
 }

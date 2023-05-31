@@ -1,4 +1,5 @@
-﻿using Networking.Context.Interface;
+﻿using Networking.Context.Response;
+using Networking.Context.Interface;
 
 namespace Networking.Protocol
 {
@@ -23,7 +24,7 @@ namespace Networking.Protocol
         }
         else
         {
-            return IContext.CreateEOS();
+            return new ContextEOS();
         }
     }
 

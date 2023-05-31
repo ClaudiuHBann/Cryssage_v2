@@ -3,6 +3,7 @@
 using Networking.Manager;
 
 using Networking.Context;
+using Networking.Context.Response;
 using Networking.Context.Interface;
 
 using Networking.Protocol;
@@ -10,7 +11,7 @@ using Networking.Protocol.File;
 
 namespace Networking.TCP.Server
 {
-public class ServerDispatcher
+public class ServerDispatcher : IDispatcher
 {
     public IContextHandler ContextHandler { get; set; }
     readonly ManagerFileTransfer managerFileTransfer;
@@ -18,30 +19,21 @@ public class ServerDispatcher
 
     public ServerDispatcher(IContextHandler contextHandler, ManagerFileTransfer managerFileTransfer,
                             ManagerConnection managerConnection)
+        : base(contextHandler)
     {
         ContextHandler = contextHandler;
         this.managerFileTransfer = managerFileTransfer;
         this.managerConnection = managerConnection;
     }
 
-    IContext DispatchProgress(ContextProgress contextProgress)
-    {
-        // the server will receive amounts of data and needs to invoke progress
-        // the server sends just a error or eos so no progress for sending
-        if (contextProgress.TypeProgress == ContextProgress.Type_.RECEIVE)
-        {
-            ContextHandler.OnReceiveProgress(contextProgress);
-        }
-
-        // this context shouldn't be send
-        return IContext.CreateError();
-    }
-
-    public IContext Dispatch(IContext context)
+    public override IContext Dispatch(IContext context)
     {
         if (context.Type == Message.Type.PROGRESS)
         {
-            return DispatchProgress((ContextProgress)context);
+            DispatchProgress((ContextProgress)context);
+
+            // this context shouldn't be send
+            return new ContextError();
         }
 
         IProtocol? protocol = null;
@@ -79,7 +71,7 @@ public class ServerDispatcher
             break;
         }
 
-        var contextResponse = protocol != null ? protocol.Exchange(context) : IContext.CreateError();
+        var contextResponse = protocol != null ? protocol.Exchange(context) : new ContextError();
         if (context.Type == Message.Type.REQUEST)
         {
             managerConnection.Respond(context.IP, (ContextRequest)context);

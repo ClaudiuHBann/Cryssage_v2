@@ -20,13 +20,13 @@ class Program
 /*
     TODO:
         MUST:
-            - save and load context
-            - split page in multiple views
+            - update user last message
             - add progress in the GUI
             - add icon for peer to see if it is online or offline
-            - add a menu bar for quick actions (broadcast, clear database, set default download location)
-            - add the ability to talk to yourself (not necessary)
+            - save and load context
             - add the ability to block peers (not necessary)
+            - split page in multiple views (not necessary)
+            - add the ability to talk to yourself (not necessary)
             - loading sent received seen logic (not necessary)
 
         NICE TO HAVE:

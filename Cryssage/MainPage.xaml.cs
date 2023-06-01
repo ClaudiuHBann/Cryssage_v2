@@ -108,6 +108,7 @@ public partial class MainPage : ContentPage
     {
         var messageFileModel = (MessageFileModel)((Button)sender).BindingContext;
         context.GetUserSelectedItemsFile().Remove(messageFileModel);
+        collectionViewFiles.IsVisible = context.GetUserSelectedItemsFile().Count > 0;
     }
 
     void EditorSend()
@@ -122,6 +123,7 @@ public partial class MainPage : ContentPage
             var editorTextTrimmed = editor.Text.Trim(' ').Trim('\n').Trim('\r');
             if (editorTextTrimmed.Length > 0)
             {
+                Console.WriteLine(editorTextTrimmed);
                 var contextText = new ContextText(editorTextTrimmed);
                 var messageText = new MessageTextModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN,
                                                        true, contextText.Text, contextText.GUID);
@@ -177,5 +179,34 @@ public partial class MainPage : ContentPage
             labelMessages.Text = string.Format(Strings.MessageUserSelectedMessagesNone, context.GetUserSelected().Name);
         }
     }
+
+    void OnClickedMenuFlyoutItemPeersSearch(object sender, EventArgs e) => context.Broadcast();
+
+    async void OnClickedMenuFlyoutItemPeersClear(object sender, EventArgs e)
+    {
+        bool clear = await DisplayAlert(Strings.MessagePeersClearTitle, Strings.MessagePeersClearDescription,
+                                        Strings.MessageYes, Strings.MessageNo);
+        if (clear)
+        {
+            context.Clear();
+        }
+    }
+
+    async void OnClickedMenuFlyoutItemChangeName(object sender, EventArgs e)
+    {
+        var name = await DisplayPromptAsync(Strings.MessageChangeNameTitle, Strings.MessageChangeNameDescription);
+    }
+
+    async void OnClickedMenuFlyoutItemChangeDDD(object sender, EventArgs e)
+    {
+        var pathFolder = await Picker.PickFolder();
+        if (pathFolder == null)
+        {
+            return;
+        }
+    }
+
+    async void OnClickedMenuFlyoutItemAbout(object sender, EventArgs e) =>
+        await DisplayAlert(Strings.MessageAboutTitle, Strings.MessageAboutDescription, Strings.MessageOK);
 }
 }

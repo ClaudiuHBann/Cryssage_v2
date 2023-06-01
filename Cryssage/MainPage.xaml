@@ -125,7 +125,7 @@
                         <Label Grid.Row="2"
                                Grid.Column="2"
                                VerticalOptions="End"
-                               Margin="0,0,12,10"
+                               Margin="0,0,12,8"
                                Text="{Binding Timestamp, Converter={StaticResource converterTimestampToTime}}"
                                HorizontalOptions="End" />
 
@@ -193,10 +193,13 @@
             <Border MinimumHeightRequest="40"
                     MaximumHeightRequest="140"
                     MinimumWidthRequest="200"
-                    Stroke="#0b141a"
-                    Margin="{Binding Mine, Converter={StaticResource converterMineToMargin}}"
-                    BackgroundColor="{Binding Mine, Converter={StaticResource converterMineToBackgroundColor}}"
-                    HorizontalOptions="{Binding Mine, Converter={StaticResource converterMineToLayoutOption}}">
+                    Stroke="#111b21"
+                    Margin="10"
+                    BackgroundColor="#202c33">
+
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="10" />
+                </Border.StrokeShape>
 
                 <Grid Margin="5">
 
@@ -223,17 +226,19 @@
                             Clicked="OnClickedButtonFileRemove">
                     </Button>
 
-                    <Image Grid.ColumnSpan="2"
+                    <Image HeightRequest="75"
+                           Margin="0,0,0,10"
                            Source="{Binding Icon}" />
 
                     <Label Grid.Row="1"
-                           VerticalOptions="Center"
-                           Text="{Binding FilePath}" />
+                           Grid.ColumnSpan="2"
+                           Margin="5,5,0,0"
+                           Text="{Binding FilePath, Converter={StaticResource converterPathAsName}}" />
 
-                    <Label Grid.Row="1"
-                           Grid.Column="1"
-                           VerticalOptions="Center"
-                           HorizontalOptions="End"
+                    <Label Grid.Column="1"
+                           VerticalOptions="End"
+                           Margin="0,0,0,10"
+                           HorizontalOptions="Start"
                            Text="{Binding Size, Converter={StaticResource converterSizeAsString}}" />
 
                 </Grid>
@@ -250,37 +255,52 @@
     <ContentPage.MenuBarItems>
 
         <MenuBarItem Text="Actions">
-            <MenuFlyoutItem Text="Search Peers">
+            <MenuFlyoutItem Text="Search Peers"
+                            Clicked="OnClickedMenuFlyoutItemPeersSearch">
                 <MenuFlyoutItem.IconImageSource>
-                    <FontImageSource Glyph="&#xE10B;" />
+                    <FontImageSource Glyph="{x:Static resources:FontIcons.Magnify}"
+                                     FontFamily="IconFontTypes"
+                                     Size="Large" />
                 </MenuFlyoutItem.IconImageSource>
             </MenuFlyoutItem>
 
-            <MenuFlyoutItem Text="Clear Peers">
+            <MenuFlyoutItem Text="Clear Peers"
+                            Clicked="OnClickedMenuFlyoutItemPeersClear">
                 <MenuFlyoutItem.IconImageSource>
-                    <FontImageSource Glyph="&#x23F8;" />
+                    <FontImageSource Glyph="{x:Static resources:FontIcons.TrashCanOutline}"
+                                     FontFamily="IconFontTypes"
+                                     Size="Large" />
                 </MenuFlyoutItem.IconImageSource>
             </MenuFlyoutItem>
         </MenuBarItem>
 
         <MenuBarItem Text="Settings">
-            <MenuFlyoutItem Text="Change Name">
+            <MenuFlyoutItem Text="Change Name"
+                            Clicked="OnClickedMenuFlyoutItemChangeName">
                 <MenuFlyoutItem.IconImageSource>
-                    <FontImageSource Glyph="&#xE10B;" />
+                    <FontImageSource Glyph="{x:Static resources:FontIcons.RenameBox}"
+                                     FontFamily="IconFontTypes"
+                                     Size="Large" />
                 </MenuFlyoutItem.IconImageSource>
             </MenuFlyoutItem>
 
-            <MenuFlyoutItem Text="Change Default Download Directory">
+            <MenuFlyoutItem Text="Change Default Download Directory"
+                            Clicked="OnClickedMenuFlyoutItemChangeDDD">
                 <MenuFlyoutItem.IconImageSource>
-                    <FontImageSource Glyph="&#x23F8;" />
+                    <FontImageSource Glyph="{x:Static resources:FontIcons.FolderDownload}"
+                                     FontFamily="IconFontTypes"
+                                     Size="Large" />
                 </MenuFlyoutItem.IconImageSource>
             </MenuFlyoutItem>
         </MenuBarItem>
 
         <MenuBarItem Text="Help">
-            <MenuFlyoutItem Text="About">
+            <MenuFlyoutItem Text="About"
+                            Clicked="OnClickedMenuFlyoutItemAbout">
                 <MenuFlyoutItem.IconImageSource>
-                    <FontImageSource Glyph="&#xE10B;" />
+                    <FontImageSource Glyph="{x:Static resources:FontIcons.Earth}"
+                                     FontFamily="IconFontTypes"
+                                     Size="Large" />
                 </MenuFlyoutItem.IconImageSource>
             </MenuFlyoutItem>
         </MenuBarItem>
@@ -325,7 +345,13 @@
             <CollectionView x:Name="collectionViewMessages"
                             ItemTemplate="{StaticResource dataTemplateSelectorMessage}" />
 
+            <BoxView Color="#111b21"
+                     HeightRequest="5"
+                     VerticalOptions="Start"
+                     HorizontalOptions="Fill" />
+
             <CollectionView x:Name="collectionViewFiles"
+                            BackgroundColor="#111b21"
                             SelectionMode="None"
                             MaximumHeightRequest="150"
                             MinimumHeightRequest="100"

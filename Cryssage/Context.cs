@@ -28,12 +28,16 @@ public class Context : IContextHandler
         viewUser = uv;
 
         var userNew = new UserModel("127.0.0.1", "dotnet_bot.png", "Pulea", DateTime.MinValue, "");
-        var userNew1 = new UserModel("127.0.0.1", "dotnet_bot.png", "Pulea", DateTime.MinValue, "");
         viewUser.Items.Add(userNew);
-        viewUser.Items.Add(userNew1);
     }
 
     public void Send(string ip, IContext context) => managerNetwork.Send(ip, context);
+
+    public void Broadcast() => managerNetwork.Broadcast();
+
+    public void Clear()
+    {
+    }
 
     public void OnDiscover(ContextDiscover context)
     {

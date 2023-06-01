@@ -14,10 +14,10 @@ public class ContextProgress : IContext
 
     public Type_ TypeProgress { get; set; }
 
-    public uint Current { get; set; } = 0;
-    public uint Total { get; set; } = 0;
+    public float Current { get; set; } = 0;
+    public float Total { get; set; } = 0;
 
-    public float Percentage { get; set; } = 0f;
+    public byte Percentage { get; set; } = 0;
     public bool Done => MathF.Ceiling(Percentage) == 100;
 
     public ContextProgress(Type_ type, uint total, Guid guid) : base(Message.Type.PROGRESS, guid)
@@ -29,7 +29,7 @@ public class ContextProgress : IContext
     public float SetPercentage(uint current)
     {
         Current = current;
-        Percentage = Current / Total * 100f;
+        Percentage = (byte)(Current / Total * 100f);
 
         return Percentage;
     }

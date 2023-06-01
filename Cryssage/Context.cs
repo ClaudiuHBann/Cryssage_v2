@@ -32,7 +32,7 @@ public class Context : IContextHandler
 
     public void OnDiscover(ContextDiscover context)
     {
-        Console.WriteLine($"OnDiscover({context.Name})");
+        // Console.WriteLine($"OnDiscover({context.Name})");
 
         if (viewUser.Items.Any(user => user.Ip == context.IP))
         {

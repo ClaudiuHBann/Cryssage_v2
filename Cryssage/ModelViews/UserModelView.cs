@@ -6,9 +6,9 @@ using Cryssage.Models;
 
 namespace Cryssage.Views
 {
-public partial class UserView : ObservableObject
+public partial class UserModelView : ObservableObject
 {
-    public UserView()
+    public UserModelView()
     {
         Items = new();
     }

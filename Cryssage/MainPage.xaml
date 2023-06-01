@@ -8,16 +8,24 @@
              xmlns:convertersCUIM="clr-namespace:Cryssage.Converters.ConverterUIMessage"
              xmlns:convertersCDM="clr-namespace:Cryssage.Converters.ConverterDataMessage"
              xmlns:models="clr-namespace:Cryssage.Models"
-             Shell.NavBarIsVisible="False">
+             Shell.BackgroundColor="#0b141a"
+             Title="">
 
     <ContentPage.Resources>
+        <convertersCUIM:LayoutOption x:Key="converterMineToLayoutOption" />
+        <convertersCUIM:BackgroundColor x:Key="converterMineToBackgroundColor" />
+        <convertersCUIM:Margin x:Key="converterMineToMargin" />
+
+        <convertersCDM:Time x:Key="converterTimestampToTime" />
+        <convertersCDM:Size x:Key="converterSizeAsString" />
+        <convertersCDM:Path x:Key="converterPathAsName" />
+
         <DataTemplate x:Key="DataTemplateMessageText"
                       x:DataType="{x:Type models:MessageTextModel}">
-
             <Grid>
 
-                <Border MinimumWidthRequest="250"
-                        MaximumWidthRequest="500"
+                <Border MinimumWidthRequest="300"
+                        MaximumWidthRequest="3840"
                         Stroke="#0b141a"
                         Margin="{Binding Mine, Converter={StaticResource converterMineToMargin}}"
                         BackgroundColor="{Binding Mine, Converter={StaticResource converterMineToBackgroundColor}}"
@@ -47,7 +55,7 @@
 
                         <Label Grid.Row="2"
                                VerticalOptions="End"
-                               Margin="0,0,10,3"
+                               Margin="0,0,12,10"
                                Text="{Binding Timestamp, Converter={StaticResource converterTimestampToTime}}"
                                HorizontalOptions="End" />
 
@@ -64,8 +72,8 @@
 
             <Grid>
 
-                <Border MinimumWidthRequest="250"
-                        MaximumWidthRequest="500"
+                <Border MinimumWidthRequest="300"
+                        MaximumWidthRequest="3840"
                         MinimumHeightRequest="50"
                         MaximumHeightRequest="100"
                         Stroke="#0b141a"
@@ -96,7 +104,7 @@
 
                         <Label Grid.Column="1"
                                VerticalOptions="Center"
-                               Text="{Binding FilePath}" />
+                               Text="{Binding FilePath, Converter={StaticResource converterPathAsName}}" />
 
                         <Label Grid.Row="1"
                                Grid.Column="1"
@@ -117,7 +125,7 @@
                         <Label Grid.Row="2"
                                Grid.Column="2"
                                VerticalOptions="End"
-                               Margin="0,0,10,3"
+                               Margin="0,0,12,10"
                                Text="{Binding Timestamp, Converter={StaticResource converterTimestampToTime}}"
                                HorizontalOptions="End" />
 
@@ -129,89 +137,169 @@
 
         </DataTemplate>
 
+        <DataTemplate x:Key="DataTemplateUser"
+                      x:DataType="{x:Type models:UserModel}">
+
+            <Grid HeightRequest="75">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="50*" />
+                    <RowDefinition Height="50*" />
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="20*" />
+                    <ColumnDefinition Width="55*" />
+                    <ColumnDefinition Width="25*" />
+                </Grid.ColumnDefinitions>
+
+                <Image Grid.RowSpan="2"
+                       VerticalOptions="Center"
+                       HeightRequest="60"
+                       Source="{Binding Avatar}" />
+
+                <Label Grid.Column="1"
+                       VerticalOptions="Center"
+                       Margin="10,0,0,0"
+                       Text="{Binding Name}" />
+
+                <Label Grid.Column="2"
+                       VerticalOptions="Center"
+                       HorizontalTextAlignment="End"
+                       Margin="0,0,5,0"
+                       Text="{Binding Time, Converter={StaticResource converterTimestampToTime}}" />
+
+                <Label Grid.Column="1"
+                       Grid.Row="1"
+                       Grid.ColumnSpan="2"
+                       VerticalOptions="Center"
+                       Margin="5,0,0,0"
+                       Text="{Binding Message}" />
+
+                <BoxView Color="#0b141a"
+                         Grid.Row="1"
+                         VerticalOptions="End"
+                         Grid.ColumnSpan="3"
+                         HeightRequest="3"
+                         HorizontalOptions="Fill" />
+
+            </Grid>
+
+        </DataTemplate>
+
+        <DataTemplate x:Key="DataTemplateFile"
+                      x:DataType="{x:Type models:MessageFileModel}">
+
+            <Border MinimumHeightRequest="40"
+                    MaximumHeightRequest="140"
+                    MinimumWidthRequest="200"
+                    Stroke="#0b141a"
+                    Margin="{Binding Mine, Converter={StaticResource converterMineToMargin}}"
+                    BackgroundColor="{Binding Mine, Converter={StaticResource converterMineToBackgroundColor}}"
+                    HorizontalOptions="{Binding Mine, Converter={StaticResource converterMineToLayoutOption}}">
+
+                <Grid Margin="5">
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="75*" />
+                        <RowDefinition Height="25*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="66*" />
+                        <ColumnDefinition Width="33*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button HorizontalOptions="End"
+                            Grid.Column="1"
+                            Text="X"
+                            BackgroundColor="Transparent"
+                            BorderColor="Transparent"
+                            VerticalOptions="Start"
+                            FontSize="Medium"
+                            Margin="0,-10,-10,0"
+                            TextColor="Red"
+                            FontAttributes="Bold"
+                            Clicked="OnClickedButtonFileRemove">
+                    </Button>
+
+                    <Image Grid.ColumnSpan="2"
+                           Source="{Binding Icon}" />
+
+                    <Label Grid.Row="1"
+                           VerticalOptions="Center"
+                           Text="{Binding FilePath}" />
+
+                    <Label Grid.Row="1"
+                           Grid.Column="1"
+                           VerticalOptions="Center"
+                           HorizontalOptions="End"
+                           Text="{Binding Size, Converter={StaticResource converterSizeAsString}}" />
+
+                </Grid>
+
+            </Border>
+
+        </DataTemplate>
+
         <local:DataTemplateSelectorMessage x:Key="dataTemplateSelectorMessage"
                                            MessageFile="{StaticResource DataTemplateMessageFile}"
                                            MessageText="{StaticResource DataTemplateMessageText}" />
-
-        <convertersCUIM:LayoutOption x:Key="converterMineToLayoutOption" />
-        <convertersCUIM:BackgroundColor x:Key="converterMineToBackgroundColor" />
-        <convertersCUIM:Margin x:Key="converterMineToMargin" />
-
-        <convertersCDM:Time x:Key="converterTimestampToTime" />
-        <convertersCDM:Size x:Key="converterSizeAsString" />
     </ContentPage.Resources>
+
+    <ContentPage.MenuBarItems>
+
+        <MenuBarItem Text="Actions">
+            <MenuFlyoutItem Text="Search Peers">
+                <MenuFlyoutItem.IconImageSource>
+                    <FontImageSource Glyph="&#xE10B;" />
+                </MenuFlyoutItem.IconImageSource>
+            </MenuFlyoutItem>
+
+            <MenuFlyoutItem Text="Clear Peers">
+                <MenuFlyoutItem.IconImageSource>
+                    <FontImageSource Glyph="&#x23F8;" />
+                </MenuFlyoutItem.IconImageSource>
+            </MenuFlyoutItem>
+        </MenuBarItem>
+
+        <MenuBarItem Text="Settings">
+            <MenuFlyoutItem Text="Change Name">
+                <MenuFlyoutItem.IconImageSource>
+                    <FontImageSource Glyph="&#xE10B;" />
+                </MenuFlyoutItem.IconImageSource>
+            </MenuFlyoutItem>
+
+            <MenuFlyoutItem Text="Change Default Download Directory">
+                <MenuFlyoutItem.IconImageSource>
+                    <FontImageSource Glyph="&#x23F8;" />
+                </MenuFlyoutItem.IconImageSource>
+            </MenuFlyoutItem>
+        </MenuBarItem>
+
+        <MenuBarItem Text="Help">
+            <MenuFlyoutItem Text="About">
+                <MenuFlyoutItem.IconImageSource>
+                    <FontImageSource Glyph="&#xE10B;" />
+                </MenuFlyoutItem.IconImageSource>
+            </MenuFlyoutItem>
+        </MenuBarItem>
+
+    </ContentPage.MenuBarItems>
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="20*" />
-            <ColumnDefinition Width="80*" />
+            <ColumnDefinition Width="350" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <Grid BackgroundColor="#111b21">
+        <Grid BackgroundColor="#111b21"
+              MaximumWidthRequest="350">
 
             <CollectionView x:Name="collectionViewUsers"
                             SelectionMode="Single"
-                            SelectionChanged="OnSelectionChangedCollectionViewUsers">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="{x:Type models:UserModel}">
-
-                        <Grid Margin="0,0,0,3"
-                              MinimumWidthRequest="275"
-                              MaximumWidthRequest="350"
-                              HeightRequest="75"
-                              BackgroundColor="#111b21">
-
-                            <VisualStateManager.VisualStateGroups>
-                                <VisualStateGroup Name="CommonStates">
-                                    <VisualState Name="Normal" />
-                                    <VisualState Name="Selected">
-                                        <VisualState.Setters>
-                                            <Setter Property="BackgroundColor"
-                                                    Value="#2a3942" />
-                                        </VisualState.Setters>
-                                    </VisualState>
-
-                                </VisualStateGroup>
-                            </VisualStateManager.VisualStateGroups>
-
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="50*" />
-                                <RowDefinition Height="50*" />
-                            </Grid.RowDefinitions>
-
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="20*" />
-                                <ColumnDefinition Width="55*" />
-                                <ColumnDefinition Width="25*" />
-                            </Grid.ColumnDefinitions>
-
-                            <Image Grid.RowSpan="2"
-                                   VerticalOptions="Center"
-                                   Source="{Binding Avatar}" />
-
-                            <Label Grid.Column="1"
-                                   VerticalOptions="Center"
-                                   Margin="5,0,0,0"
-                                   Text="{Binding Name}" />
-
-                            <Label Grid.Column="2"
-                                   VerticalOptions="Center"
-                                   HorizontalTextAlignment="End"
-                                   Margin="0,0,5,0"
-                                   Text="{Binding Time, Converter={StaticResource converterTimestampToTime}}" />
-
-                            <Label Grid.Column="1"
-                                   Grid.Row="1"
-                                   Grid.ColumnSpan="2"
-                                   VerticalOptions="Center"
-                                   Margin="5,0,0,0"
-                                   Text="{Binding Message}" />
-
-                        </Grid>
-
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                            ItemTemplate="{StaticResource DataTemplateUser}"
+                            SelectionChanged="OnSelectionChangedCollectionViewUsers" />
 
         </Grid>
 
@@ -241,66 +329,10 @@
                             SelectionMode="None"
                             MaximumHeightRequest="150"
                             MinimumHeightRequest="100"
+                            ItemTemplate="{StaticResource DataTemplateFile}"
                             ItemsLayout="HorizontalList"
                             IsVisible="False"
-                            Grid.Row="1">
-
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="{x:Type models:MessageFileModel}">
-
-                        <Border MinimumHeightRequest="40"
-                                MaximumHeightRequest="140"
-                                MinimumWidthRequest="200"
-                                Stroke="#0b141a"
-                                Margin="{Binding Mine, Converter={StaticResource converterMineToMargin}}"
-                                BackgroundColor="{Binding Mine, Converter={StaticResource converterMineToBackgroundColor}}"
-                                HorizontalOptions="{Binding Mine, Converter={StaticResource converterMineToLayoutOption}}">
-
-                            <Grid Margin="5">
-
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="75*" />
-                                    <RowDefinition Height="25*" />
-                                </Grid.RowDefinitions>
-
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="66*" />
-                                    <ColumnDefinition Width="33*" />
-                                </Grid.ColumnDefinitions>
-
-                                <Button HorizontalOptions="End"
-                                        Grid.Column="1"
-                                        Text="X"
-                                        BackgroundColor="Transparent"
-                                        BorderColor="Transparent"
-                                        VerticalOptions="Start"
-                                        FontSize="Medium"
-                                        Margin="0,-10,-10,0"
-                                        TextColor="Red"
-                                        FontAttributes="Bold"
-                                        Clicked="OnClickedButtonFileRemove">
-                                </Button>
-
-                                <Image Grid.ColumnSpan="2"
-                                       Source="{Binding Icon}" />
-
-                                <Label Grid.Row="1"
-                                       VerticalOptions="Center"
-                                       Text="{Binding FilePath}" />
-
-                                <Label Grid.Row="1"
-                                       Grid.Column="1"
-                                       VerticalOptions="Center"
-                                       HorizontalOptions="End"
-                                       Text="{Binding Size, Converter={StaticResource converterSizeAsString}}" />
-
-                            </Grid>
-
-                        </Border>
-
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                            Grid.Row="1" />
 
             <Grid Grid.Row="2"
                   MaximumHeightRequest="100"
@@ -321,6 +353,11 @@
                                          Size="Large" />
                     </ImageButton.Source>
                 </ImageButton>
+
+                <BoxView Color="#0b141a"
+                         HorizontalOptions="End"
+                         WidthRequest="2"
+                         VerticalOptions="Fill" />
 
                 <ImageButton Grid.Column="1"
                              Clicked="OnClickedImageButtonAttach">

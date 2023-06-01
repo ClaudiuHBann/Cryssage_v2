@@ -4,40 +4,41 @@ namespace Cryssage.Converters.ConverterDataMessage
 {
 public class Time : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        var dateTime = (DateTime)value;
-        return dateTime == DateTime.MinValue ? "" : ((DateTime)value).ToString("hh:mm tt");
-    }
+    public object Convert(object value, Type targetType, object parameter,
+                          CultureInfo culture) => ((DateTime)value).ToLocalTime().ToShortTimeString();
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        return new DateTime().ToString();
-    }
+    public object ConvertBack(object value, Type targetType, object parameter,
+                              CultureInfo culture) => DateTime.Parse((string)value);
+}
+
+public class Path : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter,
+                          CultureInfo culture) => System.IO.Path.GetFileName((string)value);
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        throw new NotSupportedException("Could not convert narrowed file name to file path!");
 }
 
 public class Size : IValueConverter
 {
+    static readonly string[] measure = new[] { "B", "KB", "MB", "GB", "TB" };
+
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        var size = (uint)value;
+        float size = (uint)value;
+        byte measureindex = 0;
 
-        var measure = new[] { "B", "KB", "MB", "GB", "TB" };
-        uint measureindex = 0, decimals = 0;
-
-        while (size >= 1000)
+        while (size >= 1000f)
         {
             measureindex++;
-            decimals = size % 1000;
-            size /= 1000;
+            size /= 1000f;
         }
 
-        return size.ToString() + (decimals > 0 ? "," + decimals.ToString() + " " : " ") + measure[measureindex];
+        return size.ToString("0.## ") + measure[measureindex];
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        return 0;
-    }
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        throw new NotSupportedException("Could not convert narrowed file size to file size!");
 }
 }

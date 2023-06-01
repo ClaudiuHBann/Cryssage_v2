@@ -16,7 +16,7 @@ public partial class MainPage : ContentPage
 
     readonly Context context;
 
-    public MainPage(UserView uv)
+    public MainPage(UserModelView uv)
     {
         InitializeComponent();
 
@@ -112,34 +112,37 @@ public partial class MainPage : ContentPage
 
     void EditorSend()
     {
-        if (context.IsAnyUserSelected())
+        if (!context.IsAnyUserSelected())
         {
-            if (editor.Text != null)
+            return;
+        }
+
+        if (editor.Text != null)
+        {
+            var editorTextTrimmed = editor.Text.Trim(' ').Trim('\n').Trim('\r');
+            if (editorTextTrimmed.Length > 0)
             {
-                var editorTextTrimmed = editor.Text.Trim(' ').Trim('\n').Trim('\r');
-                if (editorTextTrimmed.Length > 0)
-                {
-                    var contextText = new ContextText(editorTextTrimmed);
-                    var messageText = new MessageTextModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN,
-                                                           true, contextText.Text, contextText.GUID);
+                var contextText = new ContextText(editorTextTrimmed);
+                var messageText = new MessageTextModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN,
+                                                       true, contextText.Text, contextText.GUID);
 
-                    context.AddUserSelectedMessage(messageText);
-                    context.Send(context.GetUserSelected().Ip, contextText);
-                }
-            }
-
-            foreach (var file in context.GetUserSelectedItemsFile())
-            {
-                var messageFile = new MessageFileModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN,
-                                                       true, "dotnet_bot.png", file.FilePath, file.Size);
-
-                context.AddUserSelectedMessage(messageFile);
-                context.Send(context.GetUserSelected().Ip,
-                             new ContextFileInfo(file.FilePath, file.Size, DateTime.UtcNow, messageFile.Guid));
+                context.AddUserSelectedMessage(messageText);
+                context.Send(context.GetUserSelected().Ip, contextText);
             }
         }
 
+        foreach (var file in context.GetUserSelectedItemsFile())
+        {
+            var messageFile = new MessageFileModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN, true,
+                                                   "dotnet_bot.png", file.FilePath, file.Size);
+
+            context.AddUserSelectedMessage(messageFile);
+            context.Send(context.GetUserSelected().Ip,
+                         new ContextFileInfo(file.FilePath, file.Size, DateTime.UtcNow, messageFile.Guid));
+        }
+
         UpdateChatBackgroundMessage();
+        collectionViewMessages.ScrollTo(context.GetUserSelectedItemsMessage().Count - 1);
     }
 
     void EditorReset()

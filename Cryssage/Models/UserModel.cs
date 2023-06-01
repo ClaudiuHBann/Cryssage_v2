@@ -22,10 +22,10 @@ public partial class UserModel : ObservableObject
     string message;
 
     [ObservableProperty]
-    MessageView messageView;
+    MessageModelView messageView;
 
     [ObservableProperty]
-    FileView fileView;
+    FileModelView fileView;
 
     public UserModel(string ip, string avatar, string name, DateTime time, string message)
     {

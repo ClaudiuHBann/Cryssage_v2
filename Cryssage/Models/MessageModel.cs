@@ -42,9 +42,10 @@ public partial class MessageModel : ObservableObject
     public static readonly LayoutOptions LeftLayoutOption = LayoutOptions.Start;
     public static readonly LayoutOptions RightLayoutOption = LayoutOptions.End;
 
-    private const int LeftMarginBottom = 5;
-    public static readonly Thickness LeftMargin = new(10, 0, 0, LeftMarginBottom);
-    public static readonly Thickness RightMargin = new(0, 0, 10, LeftMarginBottom);
+    private const int LeftMarginTop = 10;
+    private const int LeftMarginBottom = 10;
+    public static readonly Thickness LeftMargin = new(15, LeftMarginTop, 15, LeftMarginBottom);
+    public static readonly Thickness RightMargin = new(15, LeftMarginTop, 15, LeftMarginBottom);
 
     public MessageModel(Guid guid, MessageType type, string sender, DateTime timestamp, MessageState state, bool mine)
     {

@@ -20,14 +20,14 @@ class Program
 /*
     TODO:
         MUST:
+            - save and load context
+            - split page in multiple views
             - add progress in the GUI
             - add icon for peer to see if it is online or offline
-            - the file info message size seems to be fucking wrong (in GUI not lib)
-            - use the current time in the GUI for messages
-            - use the name of the files in the messages in GUI
             - add a menu bar for quick actions (broadcast, clear database, set default download location)
             - add the ability to talk to yourself (not necessary)
             - add the ability to block peers (not necessary)
+            - loading sent received seen logic (not necessary)
 
         NICE TO HAVE:
             - add to the parser a bit in the metadata which says about the data if it is fragmented, if it is we have

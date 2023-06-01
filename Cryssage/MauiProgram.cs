@@ -32,7 +32,7 @@ public static class MauiProgram
             .UseMauiCommunityToolkit();
 
         builder.Services.AddSingleton<MainPage>();
-        builder.Services.AddSingleton<UserView>();
+        builder.Services.AddSingleton<UserModelView>();
 
         return builder.Build();
     }

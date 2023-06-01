@@ -6,14 +6,14 @@ using Cryssage.Models;
 
 namespace Cryssage.Views
 {
-public partial class FileView : ObservableObject
+public partial class MessageModelView : ObservableObject
 {
-    public FileView()
+    public MessageModelView()
     {
         Items = new();
     }
 
     [ObservableProperty]
-    ObservableCollection<MessageFileModel> items;
+    ObservableCollection<MessageModel> items;
 }
 }

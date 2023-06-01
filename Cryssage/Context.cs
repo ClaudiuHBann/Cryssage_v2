@@ -9,30 +9,35 @@ using Networking.Context.Interface;
 
 using Cryssage.Views;
 using Cryssage.Models;
+using Cryssage.Events;
 
 namespace Cryssage
 {
 public class Context : IContextHandler
 {
     readonly ManagerNetwork managerNetwork;
-    readonly UserView viewUser;
 
+    readonly UserModelView viewUser;
     public UserModel UserSelected { get; set; }
 
-    public Context(UserView uv)
+    public EventsGUI EventsGUI { get; } = new();
+
+    public Context(UserModelView uv)
     {
         managerNetwork = new(this, new());
         viewUser = uv;
 
-        /*var userNew = new UserModel("127.0.0.1", "dotnet_bot.png", "Pulea", DateTime.MinValue, "");
-        viewUser.Items.Add(userNew);*/
+        var userNew = new UserModel("127.0.0.1", "dotnet_bot.png", "Pulea", DateTime.MinValue, "");
+        var userNew1 = new UserModel("127.0.0.1", "dotnet_bot.png", "Pulea", DateTime.MinValue, "");
+        viewUser.Items.Add(userNew);
+        viewUser.Items.Add(userNew1);
     }
 
     public void Send(string ip, IContext context) => managerNetwork.Send(ip, context);
 
     public void OnDiscover(ContextDiscover context)
     {
-        // Console.WriteLine($"OnDiscover({context.Name})");
+        Console.WriteLine($"OnDiscover({context.Name})");
 
         if (viewUser.Items.Any(user => user.Ip == context.IP))
         {

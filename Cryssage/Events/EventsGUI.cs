@@ -1,4 +1,6 @@
-﻿using Networking.Context;
+﻿using Cryssage.Models;
+
+using Networking.Context;
 
 namespace Cryssage.Events
 {

@@ -21,6 +21,8 @@
         <convertersCDM:Size x:Key="converterSizeAsString" />
         <convertersCDM:Path x:Key="converterPathAsName" />
         <convertersCDM:Progress x:Key="converterProgress" />
+        <convertersCDM:UserLastMessageText x:Key="converterUserLastMessageToText" />
+        <convertersCDM:UserLastMessageTime x:Key="converterUserLastMessageToTime" />
 
         <convertersCDT:InverseBoolean x:Key="converterInverseBoolean" />
 
@@ -187,14 +189,14 @@
                        VerticalOptions="Center"
                        HorizontalTextAlignment="End"
                        Margin="0,0,5,0"
-                       Text="{Binding Time, Converter={StaticResource converterTimestampToTime}}" />
+                       Text="{Binding MessageView, Converter={StaticResource converterUserLastMessageToTime}}" />
 
                 <Label Grid.Column="1"
                        Grid.Row="1"
                        Grid.ColumnSpan="2"
                        VerticalOptions="Center"
                        Margin="5,0,0,0"
-                       Text="{Binding Message}" />
+                       Text="{Binding MessageView, Converter={StaticResource converterUserLastMessageToText}}" />
 
                 <BoxView Color="#0b141a"
                          Grid.Row="1"

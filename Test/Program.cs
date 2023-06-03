@@ -1,5 +1,5 @@
-﻿using Test.NetworkingTests;
-using Test.ParserTests;
+﻿using Test.ParserTests;
+using Test.NetworkingTests;
 
 namespace Test
 {
@@ -20,10 +20,9 @@ class Program
 /*
     TODO:
         MUST:
-            - update user last message
             - add icon for peer to see if it is online or offline
             - save and load context
-            - cancel download or send
+            - cancel download or send (not necessary)
             - add the ability to block peers (not necessary)
             - split page in multiple views (not necessary)
             - add the ability to talk to yourself (not necessary)

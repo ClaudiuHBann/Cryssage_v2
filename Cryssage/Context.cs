@@ -28,7 +28,7 @@ public class Context : IContextHandler
         viewUser = uv;
 
 #if DEBUG
-        var userNew = new UserModel("127.0.0.1", "dotnet_bot.png", "Pulea", DateTime.MinValue, "");
+        var userNew = new UserModel("127.0.0.1", "dotnet_bot.png", "Pulea");
         viewUser.Items.Add(userNew);
 #endif
     }
@@ -51,7 +51,7 @@ public class Context : IContextHandler
         }
         else
         {
-            var userNew = new UserModel(context.IP, "dotnet_bot.png", context.Name, DateTime.MinValue, "");
+            var userNew = new UserModel(context.IP, "dotnet_bot.png", context.Name);
             viewUser.Items.Add(userNew);
         }
     }
@@ -108,7 +108,11 @@ public class Context : IContextHandler
 
     public UserModel GetUserByIP(string ip) => viewUser.Items.Where(user => user.Ip == ip).First();
 
-    public void AddUserSelectedMessage(MessageModel messageModel) => GetUserSelectedItemsMessage()?.Add(messageModel);
+    public void AddUserSelectedMessage(MessageModel messageModel)
+    {
+        GetUserSelectedItemsMessage()?.Add(messageModel);
+        viewUser.Items[GetUserSelectedIndex()].FireOnPropertyChangedMessageView();
+    }
 
     public bool IsAnyUserSelected() => GetUserSelectedIndex() != -1;
 }

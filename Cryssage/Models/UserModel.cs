@@ -16,24 +16,18 @@ public partial class UserModel : ObservableObject
     string name;
 
     [ObservableProperty]
-    DateTime time;
-
-    [ObservableProperty]
-    string message;
-
-    [ObservableProperty]
     MessageModelView messageView;
+
+    public void FireOnPropertyChangedMessageView() => OnPropertyChanged(nameof(MessageView));
 
     [ObservableProperty]
     FileModelView fileView;
 
-    public UserModel(string ip, string avatar, string name, DateTime time, string message)
+    public UserModel(string ip, string avatar, string name)
     {
         Ip = ip;
         Avatar = avatar;
         Name = name;
-        Time = time;
-        Message = message;
 
         MessageView = new();
         FileView = new();

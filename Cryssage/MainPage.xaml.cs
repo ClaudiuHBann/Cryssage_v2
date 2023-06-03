@@ -22,6 +22,51 @@ public partial class MainPage : ContentPage
 
         context = new(uv);
         collectionViewUsers.ItemsSource = uv.Items;
+
+        InitializeEventsGUI(uv);
+    }
+
+    void InitializeEventsGUI(UserModelView uv)
+    {
+        context.EventsGUI.OnProgressSend += contextProgress =>
+        {
+            var user = uv.Items.Where(user => user.Ip == contextProgress.IP).First();
+            var messages = user.MessageView.Items.Where(messageFile => messageFile.Guid == contextProgress.GUID);
+            if (!messages.Any())
+            {
+                return;
+            }
+
+            var messageFile = messages.First();
+            if (messageFile.Type != MessageType.FILE)
+            {
+                return;
+            }
+
+            var messageFileModel = (MessageFileModel)messageFile;
+            messageFileModel.Progress = contextProgress.Percentage;
+            messageFileModel.ProgressStart = contextProgress.Done ? false : contextProgress.Percentage > 0;
+        };
+
+        context.EventsGUI.OnProgressReceive += contextProgress =>
+        {
+            var user = uv.Items.Where(user => user.Ip == contextProgress.IP).First();
+            var messages = user.MessageView.Items.Where(messageFile => messageFile.Guid == contextProgress.GUID);
+            if (!messages.Any())
+            {
+                return;
+            }
+
+            var messageFile = messages.First();
+            if (messageFile.Type != MessageType.FILE)
+            {
+                return;
+            }
+
+            var messageFileModel = (MessageFileModel)messageFile;
+            messageFileModel.Progress = contextProgress.Percentage;
+            messageFileModel.ProgressStart = contextProgress.Done ? false : contextProgress.Percentage > 0;
+        };
     }
 
     void OnSelectionChangedCollectionViewUsers(object sender, SelectionChangedEventArgs e)
@@ -109,6 +154,8 @@ public partial class MainPage : ContentPage
         var messageFileModel = (MessageFileModel)((Button)sender).BindingContext;
         context.GetUserSelectedItemsFile().Remove(messageFileModel);
         collectionViewFiles.IsVisible = context.GetUserSelectedItemsFile().Count > 0;
+        buttonSendRecordIcon.Glyph =
+            context.GetUserSelectedItemsFile().Count > 0 ? FontIcons.Airplane : FontIcons.Microphone;
     }
 
     void EditorSend()
@@ -166,6 +213,7 @@ public partial class MainPage : ContentPage
 
         files.Add(messageFileModel);
         collectionViewFiles.IsVisible = true;
+        buttonSendRecordIcon.Glyph = FontIcons.Airplane;
     }
 
     void UpdateChatBackgroundMessage()

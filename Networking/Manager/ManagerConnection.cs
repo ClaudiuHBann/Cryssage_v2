@@ -1,6 +1,5 @@
-﻿using Parser.Message;
-
-using Networking.TCP.Client;
+﻿using Networking.TCP.Client;
+using Networking.TCP.Server;
 using Networking.Context.Interface;
 
 namespace Networking.Manager
@@ -26,6 +25,7 @@ public class ManagerConnection
                                return;
                            }
 
+                           context.IP = ServerProcessor.GetClientEndPointRemote(client);
                            processor.ProcessSend(client, context);
                        });
     }
@@ -42,6 +42,7 @@ public class ManagerConnection
                                return;
                            }
 
+                           contextRequest.IP = ServerProcessor.GetClientEndPointRemote(client);
                            processor.ProcessResponse(client, contextRequest);
                        });
     }

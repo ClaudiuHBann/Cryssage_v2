@@ -7,7 +7,7 @@ namespace Networking.Manager
 {
 public class ManagerFileTransfer
 {
-    class FileInfo
+    public class FileInfo
     {
         public string Path { get; set; }
         public uint Size { get; set; }
@@ -63,35 +63,33 @@ public class ManagerFileTransfer
         }
     }
 
-    public bool Write(Guid fileGUID, byte[] stream)
+    // returns the new file info if the operation was successfully otherwise null
+    public FileInfo? Write(Guid fileGUID, byte[] stream)
     {
         // if the index is same as the size then we need to send EOS
         if (!fileGUIDToLocalFilePaths.ContainsKey(fileGUID) ||
             fileGUIDToLocalFilePaths[fileGUID].Index == fileGUIDToLocalFilePaths[fileGUID].Size)
         {
-            return false;
+            return null;
         }
 
         // open file stream and write stream
         using var streamFile = new FileStream(fileGUIDToLocalFilePaths[fileGUID].Path, FileMode.Append);
         streamFile.Write(stream, 0, stream.Length);
 
-        // update the file index and invoke receive progress event
+        // update the file index
         fileGUIDToLocalFilePaths[fileGUID].Index += (uint)stream.Length;
-        var contextProgress =
-            new ContextProgress(ContextProgress.Type_.RECEIVE, fileGUIDToLocalFilePaths[fileGUID].Size, fileGUID);
-        contextProgress.SetPercentage(fileGUIDToLocalFilePaths[fileGUID].Index);
-        contextHandler.OnReceiveProgress(contextProgress);
 
-        return true;
+        return fileGUIDToLocalFilePaths[fileGUID];
     }
 
-    public byte[]? Read(Guid fileGUID)
+    // returns the stream and the new file info
+    public (byte[]?, FileInfo?) Read(Guid fileGUID)
     {
         if (!fileGUIDToLocalFilePaths.ContainsKey(fileGUID) || !File.Exists(fileGUIDToLocalFilePaths[fileGUID].Path) ||
             fileGUIDToLocalFilePaths[fileGUID].Index == fileGUIDToLocalFilePaths[fileGUID].Size)
         {
-            return null;
+            return (null, null);
         }
 
         // open file stream and create buffer
@@ -103,14 +101,10 @@ public class ManagerFileTransfer
         var bytesReadCount = streamFile.Read(stream, 0, stream.Length);
         Array.Resize(ref stream, bytesReadCount);
 
-        // update the file index and invoke send progress event
+        // update the file index
         fileGUIDToLocalFilePaths[fileGUID].Index += (uint)bytesReadCount;
-        var contextProgress =
-            new ContextProgress(ContextProgress.Type_.SEND, fileGUIDToLocalFilePaths[fileGUID].Size, fileGUID);
-        contextProgress.SetPercentage(fileGUIDToLocalFilePaths[fileGUID].Index);
-        contextHandler.OnSendProgress(contextProgress);
 
-        return stream;
+        return (stream, fileGUIDToLocalFilePaths[fileGUID]);
     }
 }
 }

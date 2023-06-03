@@ -21,9 +21,9 @@ class Program
     TODO:
         MUST:
             - update user last message
-            - add progress in the GUI
             - add icon for peer to see if it is online or offline
             - save and load context
+            - cancel download or send
             - add the ability to block peers (not necessary)
             - split page in multiple views (not necessary)
             - add the ability to talk to yourself (not necessary)
@@ -35,4 +35,5 @@ class Program
               bytes (especially for the sending data protocol to make it faster)
             - the manager for file transfer should better handle and return errors not just a EOS for errors
             - redo the tests with a framework (not necessary)
+            - switch to microsoft's json parser
 */

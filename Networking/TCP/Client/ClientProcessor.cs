@@ -1,5 +1,7 @@
 ﻿using Parser.Message;
 
+using Networking.TCP.Server;
+
 using Networking.Context.Interface;
 
 namespace Networking.TCP.Client
@@ -16,6 +18,7 @@ public class ClientProcessor
     public void ProcessSend(TCPClient client, IContext context)
     {
         var contextReponse = Dispatcher.Dispatch(context);
+        contextReponse.IP = ServerProcessor.GetClientEndPointRemote(client);
         client.Send(contextReponse,
                     contextProgress =>
                     {
@@ -52,6 +55,7 @@ public class ClientProcessor
     public void ProcessResponse(TCPClient client, ContextRequest contextRequest)
     {
         var contextReponse = Dispatcher.DispatchResponse(contextRequest);
+        contextReponse.IP = ServerProcessor.GetClientEndPointRemote(client);
         client.Send(contextReponse,
                     contextProgress =>
                     {

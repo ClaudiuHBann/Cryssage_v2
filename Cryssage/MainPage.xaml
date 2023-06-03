@@ -4,10 +4,11 @@
              x:Class="Cryssage.MainPage"
              xmlns:local="clr-namespace:Cryssage"
              xmlns:views="clr-namespace:Cryssage.Views"
+             xmlns:models="clr-namespace:Cryssage.Models"
              xmlns:resources="clr-namespace:Cryssage.Resources"
              xmlns:convertersCUIM="clr-namespace:Cryssage.Converters.ConverterUIMessage"
              xmlns:convertersCDM="clr-namespace:Cryssage.Converters.ConverterDataMessage"
-             xmlns:models="clr-namespace:Cryssage.Models"
+             xmlns:convertersCDT="clr-namespace:Cryssage.Converters.ConverterDataType"
              Shell.BackgroundColor="#0b141a"
              Title="">
 
@@ -19,6 +20,9 @@
         <convertersCDM:Time x:Key="converterTimestampToTime" />
         <convertersCDM:Size x:Key="converterSizeAsString" />
         <convertersCDM:Path x:Key="converterPathAsName" />
+        <convertersCDM:Progress x:Key="converterProgress" />
+
+        <convertersCDT:InverseBoolean x:Key="converterInverseBoolean" />
 
         <DataTemplate x:Key="DataTemplateMessageText"
                       x:DataType="{x:Type models:MessageTextModel}">
@@ -70,7 +74,7 @@
         <DataTemplate x:Key="DataTemplateMessageFile"
                       x:DataType="{x:Type models:MessageFileModel}">
 
-            <Grid>
+            <Grid MinimumHeightRequest="125">
 
                 <Border MinimumWidthRequest="300"
                         MaximumWidthRequest="3840"
@@ -94,12 +98,14 @@
                         </Grid.RowDefinitions>
 
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="25*" />
-                            <ColumnDefinition Width="50*" />
-                            <ColumnDefinition Width="25*" />
+                            <ColumnDefinition Width="75" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="75" />
                         </Grid.ColumnDefinitions>
 
-                        <Image Grid.RowSpan="2"
+                        <Image Grid.RowSpan="3"
+                               HeightRequest="50"
+                               Margin="10,0,10,10"
                                Source="{Binding Icon}" />
 
                         <Label Grid.Column="1"
@@ -113,8 +119,9 @@
 
                         <ImageButton Grid.Column="2"
                                      Clicked="OnClickedImageButtonDownload"
-                                     BackgroundColor="{Binding Mine, Converter={StaticResource converterMineToBackgroundColor}}"
-                                     Grid.RowSpan="2">
+                                     IsVisible="{Binding Mine, Converter={StaticResource converterInverseBoolean}}"
+                                     IsEnabled="{Binding ProgressStart, Converter={StaticResource converterInverseBoolean}}"
+                                     BackgroundColor="{Binding Mine, Converter={StaticResource converterMineToBackgroundColor}}">
                             <ImageButton.Source>
                                 <FontImageSource Glyph="{x:Static resources:FontIcons.Download}"
                                                  FontFamily="IconFontTypes"
@@ -122,12 +129,25 @@
                             </ImageButton.Source>
                         </ImageButton>
 
-                        <Label Grid.Row="2"
+                        <Label Grid.Row="1"
                                Grid.Column="2"
                                VerticalOptions="End"
-                               Margin="0,0,12,8"
+                               Margin="0,0,10,0"
                                Text="{Binding Timestamp, Converter={StaticResource converterTimestampToTime}}"
                                HorizontalOptions="End" />
+
+                        <ProgressBar Grid.Row="2"
+                                     Margin="10,0,75,0"
+                                     IsVisible="{Binding ProgressStart}"
+                                     Progress="{Binding Progress, Converter={StaticResource converterProgress}}"
+                                     Grid.ColumnSpan="3" />
+
+                        <Label Grid.Row="2"
+                               Grid.Column="2"
+                               Margin="0,0,15,0"
+                               IsVisible="{Binding ProgressStart}"
+                               HorizontalOptions="End"
+                               Text="{Binding Progress, StringFormat='{}{0} %'}" />
 
                     </Grid>
 

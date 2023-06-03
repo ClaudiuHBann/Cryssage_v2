@@ -27,8 +27,10 @@ public class Context : IContextHandler
         managerNetwork = new(this, new());
         viewUser = uv;
 
+#if DEBUG
         var userNew = new UserModel("127.0.0.1", "dotnet_bot.png", "Pulea", DateTime.MinValue, "");
         viewUser.Items.Add(userNew);
+#endif
     }
 
     public void Send(string ip, IContext context) => managerNetwork.Send(ip, context);
@@ -57,6 +59,7 @@ public class Context : IContextHandler
     public void OnSendProgress(ContextProgress context)
     {
         Console.WriteLine($"OnSendProgress({context.Percentage}, {context.Done})");
+        EventsGUI.OnProgressSend(context);
     }
 
     public void OnReceiveText(ContextText context)
@@ -80,6 +83,7 @@ public class Context : IContextHandler
     public void OnReceiveProgress(ContextProgress context)
     {
         Console.WriteLine($"OnReceiveProgress({context.Percentage}, {context.Done})");
+        EventsGUI.OnProgressReceive(context);
     }
 
     public int GetUserSelectedIndex() => viewUser.Items.IndexOf(UserSelected);

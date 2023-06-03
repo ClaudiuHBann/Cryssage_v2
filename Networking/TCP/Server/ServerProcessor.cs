@@ -1,7 +1,6 @@
 ﻿using Parser.Message;
 
 using Networking.TCP.Client;
-using Networking.Context.Interface;
 
 namespace Networking.TCP.Server
 {
@@ -14,16 +13,8 @@ public class ServerProcessor
         Dispatcher = serverDispatcher;
     }
 
-    static string GetClientEndPointRemote(TCPClient client)
-    {
-        string endPointRemote = "127.0.0.1";
-        if (client.EndPointRemote != null && !client.EndPointRemote.Address.ToString().Contains("127.0.0.1"))
-        {
-            endPointRemote = client.EndPointRemote.Address.ToString();
-        }
-
-        return endPointRemote;
-    }
+    public static string GetClientEndPointRemote(TCPClient client) =>
+        client.EndPointRemote?.Address.MapToIPv4().ToString();
 
     public void Process(TCPClient client)
     {

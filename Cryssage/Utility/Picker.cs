@@ -1,13 +1,13 @@
 ﻿using CommunityToolkit.Maui.Storage;
 
-namespace Cryssage
+namespace Cryssage.Utility
 {
-public class Picker
-{
-    public static async Task<IEnumerable<FileResult>> PickAnyFiles(string action = "send")
+    public class Picker
     {
-        FilePickerFileType fileTypes = new(
-            new Dictionary<DevicePlatform, IEnumerable<string>> { { DevicePlatform.iOS, Array.Empty<string>() },
+        public static async Task<IEnumerable<FileResult>> PickAnyFiles(string action = "send")
+        {
+            FilePickerFileType fileTypes = new(
+                new Dictionary<DevicePlatform, IEnumerable<string>> { { DevicePlatform.iOS, Array.Empty<string>() },
                                                                   { DevicePlatform.WinUI, Array.Empty<string>() },
                                                                   { DevicePlatform.Tizen, Array.Empty<string>() },
                                                                   { DevicePlatform.tvOS, Array.Empty<string>() },
@@ -17,15 +17,15 @@ public class Picker
                                                                   { DevicePlatform.Unknown, Array.Empty<string>() },
                                                                   { DevicePlatform.Android, Array.Empty<string>() } });
 
-        PickOptions options = new() { PickerTitle = $"Please select a file to {action}", FileTypes = fileTypes };
+            PickOptions options = new() { PickerTitle = $"Please select a file to {action}", FileTypes = fileTypes };
 
-        return await FilePicker.Default.PickMultipleAsync(options);
-    }
+            return await FilePicker.Default.PickMultipleAsync(options);
+        }
 
-    public static async Task<string> PickFolder()
-    {
-        var folder = await FolderPicker.Default.PickAsync(new());
-        return folder?.Folder?.Path;
+        public static async Task<string> PickFolder()
+        {
+            var folder = await FolderPicker.Default.PickAsync(new());
+            return folder?.Folder?.Path;
+        }
     }
-}
 }

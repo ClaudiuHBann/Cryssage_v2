@@ -9,17 +9,33 @@ using Networking.Context;
 using Networking.Context.Discover;
 using Networking.Context.Interface;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 using Cryssage.Views;
 using Cryssage.Models;
 using Cryssage.Events;
+using Cryssage.Utility;
 
 namespace Cryssage
 {
 public class Context : IContextHandler
 {
+    const string ContextDirectory = "\\Cryssage\\";
+    const string ContextFileName = "Context.json";
+
+    class ContextHost
+    {
+        public string Name { get; set; } = Environment.MachineName;
+        public string DefaultDownloadDirectory {
+            get; set;
+        } = EnvironmentEx.GetKnownFolder(EnvironmentEx.KnownFolder.Downloads);
+    }
+
     readonly ManagerNetwork managerNetwork;
 
-    readonly UserModelView viewUser;
+    UserModelView viewUser = new();
+    ContextHost contextHost = new();
     public UserModel UserSelected { get; set; }
 
     public EventsGUI EventsGUI { get; } = new();
@@ -30,7 +46,12 @@ public class Context : IContextHandler
 
     public Context(UserModelView uv)
     {
-        managerNetwork = new(this, new());
+        // load context (users and context host) and pass our context file info
+        managerNetwork = new(this, UserAllLoad());
+        // set context handler name for discovery protocol
+        Name = contextHost.Name;
+        // set remote items and set local view
+        uv.Items = viewUser.Items;
         viewUser = uv;
 
         threadBroadcast = new Thread(ThreadBroadcast);
@@ -46,6 +67,8 @@ public class Context : IContextHandler
     {
         Interlocked.Decrement(ref threadBroadcastRunning);
         threadBroadcast.Join();
+
+        UserAllSave();
     }
 
     void ThreadBroadcast()
@@ -53,7 +76,7 @@ public class Context : IContextHandler
         while (threadBroadcastRunning == 1)
         {
             // sleep in 100ms steps and check if the thread is still running between sleeps
-            for (int i = 0; i < Utility.DELAY_BROADCAST_PROCESS_START; i += 100)
+            for (int i = 0; i < Networking.Utility.DELAY_BROADCAST_PROCESS_START; i += 100)
             {
                 Thread.Sleep(100);
                 if (threadBroadcastRunning == 0)
@@ -65,7 +88,7 @@ public class Context : IContextHandler
             Broadcast();
 
             // sleep in 100ms steps and check if the thread is still running between sleeps
-            for (int i = 0; i < Utility.DELAY_BROADCAST_PROCESS_STEP; i += 100)
+            for (int i = 0; i < Networking.Utility.DELAY_BROADCAST_PROCESS_STEP; i += 100)
             {
                 Thread.Sleep(100);
                 if (threadBroadcastRunning == 0)
@@ -86,11 +109,79 @@ public class Context : IContextHandler
 
     public void Broadcast() => managerNetwork.Broadcast();
 
-    public void Clear()
+    public void SetName(string name) => contextHost.Name = name;
+
+    public void SetDDD(string ddd) => contextHost.DefaultDownloadDirectory = ddd;
+
+    public string GetDDD() => contextHost.DefaultDownloadDirectory;
+
+    public void UserAllSave()
     {
+        // create and check file path
+        var folderPathDocuments = EnvironmentEx.GetKnownFolder(EnvironmentEx.KnownFolder.Documents);
+        var filePathContextDirectory = folderPathDocuments + ContextDirectory;
+        if (!File.Exists(filePathContextDirectory))
+        {
+            Directory.CreateDirectory(filePathContextDirectory);
+        }
+
+        // serialize context and write it
+        JsonSerializerSettings settings = new() { TypeNameHandling = TypeNameHandling.Auto };
+        var contextJSONAsBytes =
+            JsonConvert.SerializeObject(new { contextHost, viewUser }, Formatting.Indented, settings);
+
+        File.WriteAllBytes(filePathContextDirectory + ContextFileName,
+                           Networking.Utility.ENCODING_DEFAULT.GetBytes(contextJSONAsBytes));
     }
 
-    public void OnDiscover(ContextDiscover context)
+    public List<ContextFileInfo> UserAllLoad()
+    {
+        // create and check file path
+        var folderPathDocuments = EnvironmentEx.GetKnownFolder(EnvironmentEx.KnownFolder.Documents);
+        var filePathContextFile = folderPathDocuments + ContextDirectory + ContextFileName;
+        if (!File.Exists(filePathContextFile))
+        {
+            return new();
+        }
+
+        // get json to object
+        var contextJSONAsBytes = File.ReadAllBytes(filePathContextFile);
+        var contextJSONAsString = Networking.Utility.ENCODING_DEFAULT.GetString(contextJSONAsBytes);
+        JsonSerializerSettings settings = new() { TypeNameHandling = TypeNameHandling.Auto };
+        var contextJSONAsJObject = JsonConvert.DeserializeObject<JObject>(contextJSONAsString, settings);
+
+        // initialize objects and reset essential data
+        contextHost =
+            contextJSONAsJObject.HasValues ? contextJSONAsJObject[nameof(contextHost)].ToObject<ContextHost>() : new();
+        viewUser =
+            contextJSONAsJObject.HasValues ? contextJSONAsJObject[nameof(viewUser)].ToObject<UserModelView>() : new();
+        foreach (var user in viewUser.Items)
+        {
+            user.Online = false;
+            foreach (var message in user.MessageView.Items)
+            {
+                if (message.Type == MessageType.FILE)
+                {
+                    ((MessageFileModel)message).ProgressStart = false;
+                }
+            }
+        }
+
+        // return all the users file messages that are mine
+        return viewUser.Items.SelectMany(user => user.MessageView.Items)
+            .Where(message => message.Type == MessageType.FILE && message.Mine)
+            .Select(message =>
+                    {
+                        var messageFile = (MessageFileModel)message;
+                        return new ContextFileInfo(messageFile.FilePath, messageFile.Size, messageFile.Timestamp,
+                                                   messageFile.Guid);
+                    })
+            .ToList();
+    }
+
+    public void Clear() => viewUser.Items.Clear();
+
+    public override void OnDiscover(ContextDiscover context)
     {
         Console.WriteLine($"OnDiscover({context.Name})");
 
@@ -111,31 +202,33 @@ public class Context : IContextHandler
         }
     }
 
-    public void OnSendProgress(ContextProgress context)
+    public override void OnSendProgress(ContextProgress context)
     {
         Console.WriteLine($"OnSendProgress({context.Percentage}, {context.Done})");
         EventsGUI.OnProgressSend(context);
     }
 
-    public void OnReceiveText(ContextText context)
+    public override void OnReceiveText(ContextText context)
     {
         Console.WriteLine($"OnReceiveText({context.Text}, {context.DateTime})");
 
-        var message = new MessageTextModel(GetUserByIP(context.IP).Name, context.DateTime, MessageState.SEEN, false,
-                                           context.Text, context.GUID);
+        var message =
+            new MessageTextModel(GetUserByIP(context.IP).Name, context.DateTime, false, context.Text, context.GUID);
         GetUserByIP(context.IP).MessageView.Items.Add(message);
+        GetUserByIP(context.IP).FireOnPropertyChangedMessageView();
     }
 
-    public void OnReceiveFileInfo(ContextFileInfo context)
+    public override void OnReceiveFileInfo(ContextFileInfo context)
     {
         Console.WriteLine($"OnReceiveFileInfo({context.Path}, {context.Size}, {context.DateTime})");
 
-        var message = new MessageFileModel(GetUserByIP(context.IP).Name, context.DateTime, MessageState.SEEN, false,
-                                           "dotnet_bot.png", context.Path, context.Size, context.GUID);
+        var message = new MessageFileModel(GetUserByIP(context.IP).Name, context.DateTime, false, "dotnet_bot.png",
+                                           context.Path, context.Size, context.GUID);
         GetUserByIP(context.IP).MessageView.Items.Add(message);
+        GetUserByIP(context.IP).FireOnPropertyChangedMessageView();
     }
 
-    public void OnReceiveProgress(ContextProgress context)
+    public override void OnReceiveProgress(ContextProgress context)
     {
         Console.WriteLine($"OnReceiveProgress({context.Percentage}, {context.Done})");
         EventsGUI.OnProgressReceive(context);

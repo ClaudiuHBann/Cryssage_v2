@@ -20,7 +20,6 @@ class Program
 /*
     TODO:
         MUST:
-            - save and load context
             - notifications (not necessary)
             - run in background on close and add to tray icon (not necessary)
             - queue of messages for offline  (not necessary)

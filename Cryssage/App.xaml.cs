@@ -2,11 +2,14 @@
 
 public partial class App : Application
 {
-    public App()
+    readonly MainPage mp;
+
+    public App(MainPage mp)
     {
         InitializeComponent();
 
-        MainPage = new MainPage(new());
+        this.mp = mp;
+        MainPage = new AppShell();
     }
 
     protected override Window CreateWindow(IActivationState activationState)
@@ -16,7 +19,7 @@ public partial class App : Application
         window.MinimumWidth = 1280;
         window.MinimumHeight = 720;
 
-        window.Destroying += (sender, args) => ((MainPage)MainPage).Context.Destructor();
+        window.Destroying += (sender, args) => mp.Context.Destructor();
 
         return window;
     }

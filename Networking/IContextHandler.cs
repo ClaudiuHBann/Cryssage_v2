@@ -3,17 +3,19 @@ using Networking.Context.Discover;
 
 namespace Networking
 {
-    public interface IContextHandler
-    {
-        // discover
-        public void OnDiscover(ContextDiscover context);
+public abstract class IContextHandler
+{
+    public string Name { get; set; } = Environment.MachineName;
 
-        // send
-        public void OnSendProgress(ContextProgress context);
+    // discover
+    public abstract void OnDiscover(ContextDiscover context);
 
-        // receive
-        public void OnReceiveText(ContextText context);
-        public void OnReceiveFileInfo(ContextFileInfo context);
-        public void OnReceiveProgress(ContextProgress context);
-    }
+    // send
+    public abstract void OnSendProgress(ContextProgress context);
+
+    // receive
+    public abstract void OnReceiveText(ContextText context);
+    public abstract void OnReceiveFileInfo(ContextFileInfo context);
+    public abstract void OnReceiveProgress(ContextProgress context);
+}
 }

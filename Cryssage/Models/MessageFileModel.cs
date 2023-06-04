@@ -21,9 +21,9 @@ public partial class MessageFileModel : MessageModel
     [ObservableProperty]
     bool progressStart;
 
-    public MessageFileModel(string sender, DateTime timestamp, MessageState state, bool mine, string icon,
-                            string filePath, uint size, Guid? guid = null)
-        : base(guid ?? Guid.NewGuid(), MessageType.FILE, sender, timestamp, state, mine)
+    public MessageFileModel(string sender, DateTime timestamp, bool mine, string icon, string filePath, uint size,
+                            Guid? guid = null)
+        : base(guid ?? Guid.NewGuid(), MessageType.FILE, sender, timestamp, mine)
     {
         Icon = icon;
         FilePath = filePath;

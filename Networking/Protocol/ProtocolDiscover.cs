@@ -16,7 +16,7 @@ namespace Networking.Protocol
         if (!context.Responded)
         {
             context.Responded = true;
-            return new ContextDiscover(Environment.MachineName);
+            return new ContextDiscover(ContextHandler.Name);
         }
         else
         {

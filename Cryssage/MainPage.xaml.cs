@@ -123,27 +123,22 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        var files = await Picker.PickAnyFiles();
+        var files = await Utility.Picker.PickAnyFiles();
         foreach (var file in files)
         {
             var fileSize = (uint) new FileInfo(file.FullPath).Length;
-            var message = new MessageFileModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN, true,
-                                               "dotnet_bot.png", file.FullPath, fileSize, Guid.NewGuid());
+            var message = new MessageFileModel(Environment.MachineName, DateTime.UtcNow, true, "dotnet_bot.png",
+                                               file.FullPath, fileSize, Guid.NewGuid());
 
             AddUserSelectedFile(message);
         }
     }
 
-    async void OnClickedImageButtonDownload(object sender, EventArgs e)
+    void OnClickedImageButtonDownload(object sender, EventArgs e)
     {
         var messageFile = (MessageFileModel)((ImageButton)sender).BindingContext;
 
-        var pathFolder = await Picker.PickFolder();
-        if (pathFolder == null)
-        {
-            return;
-        }
-        var pathFile = pathFolder + "\\" + Path.GetFileName(messageFile.FilePath);
+        var pathFile = Context.GetDDD() + "\\" + Path.GetFileName(messageFile.FilePath);
 
         Context.Send(Context.GetUserSelected().Ip,
                      new ContextFileRequest(pathFile, messageFile.Size, messageFile.Guid));
@@ -172,8 +167,8 @@ public partial class MainPage : ContentPage
             {
                 Console.WriteLine(editorTextTrimmed);
                 var contextText = new ContextText(editorTextTrimmed);
-                var messageText = new MessageTextModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN,
-                                                       true, contextText.Text, contextText.GUID);
+                var messageText = new MessageTextModel(Environment.MachineName, DateTime.UtcNow, true, contextText.Text,
+                                                       contextText.GUID);
 
                 Context.AddUserSelectedMessage(messageText);
                 Context.Send(Context.GetUserSelected().Ip, contextText);
@@ -182,8 +177,8 @@ public partial class MainPage : ContentPage
 
         foreach (var file in Context.GetUserSelectedItemsFile())
         {
-            var messageFile = new MessageFileModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN, true,
-                                                   "dotnet_bot.png", file.FilePath, file.Size);
+            var messageFile = new MessageFileModel(Environment.MachineName, DateTime.UtcNow, true, "dotnet_bot.png",
+                                                   file.FilePath, file.Size);
 
             Context.AddUserSelectedMessage(messageFile);
             Context.Send(Context.GetUserSelected().Ip,
@@ -243,14 +238,18 @@ public partial class MainPage : ContentPage
     async void OnClickedMenuFlyoutItemChangeName(object sender, EventArgs e)
     {
         var name = await DisplayPromptAsync(Strings.MessageChangeNameTitle, Strings.MessageChangeNameDescription);
+        if (name.Trim(' ').Length > 0)
+        {
+            Context.SetName(name.Trim(' '));
+        }
     }
 
     async void OnClickedMenuFlyoutItemChangeDDD(object sender, EventArgs e)
     {
-        var pathFolder = await Picker.PickFolder();
-        if (pathFolder == null)
+        var pathFolder = await Utility.Picker.PickFolder();
+        if (pathFolder != null)
         {
-            return;
+            Context.SetDDD(pathFolder);
         }
     }
 

@@ -8,14 +8,6 @@ public enum MessageType : byte
     FILE
 }
 
-public enum MessageState : byte
-{
-    LOADING,
-    SENT,
-    RECEIVED,
-    SEEN
-}
-
 public partial class MessageModel : ObservableObject
 {
     [ObservableProperty]
@@ -31,9 +23,6 @@ public partial class MessageModel : ObservableObject
     DateTime timestamp;
 
     [ObservableProperty]
-    MessageState state;
-
-    [ObservableProperty]
     bool mine;
 
     public static readonly Color LeftColor = new(32, 44, 51);
@@ -47,13 +36,12 @@ public partial class MessageModel : ObservableObject
     public static readonly Thickness LeftMargin = new(15, LeftMarginTop, 15, LeftMarginBottom);
     public static readonly Thickness RightMargin = new(15, LeftMarginTop, 15, LeftMarginBottom);
 
-    public MessageModel(Guid guid, MessageType type, string sender, DateTime timestamp, MessageState state, bool mine)
+    public MessageModel(Guid guid, MessageType type, string sender, DateTime timestamp, bool mine)
     {
         Guid = guid;
         Type = type;
         Sender = sender;
         Timestamp = timestamp;
-        State = state;
         Mine = mine;
     }
 }

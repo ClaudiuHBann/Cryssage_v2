@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Cryssage.MainPage"
              xmlns:local="clr-namespace:Cryssage"
+             xmlns:utility="clr-namespace:Cryssage.Utility"
              xmlns:views="clr-namespace:Cryssage.Views"
              xmlns:models="clr-namespace:Cryssage.Models"
              xmlns:resources="clr-namespace:Cryssage.Resources"
@@ -281,7 +282,7 @@
 
         </DataTemplate>
 
-        <local:DataTemplateSelectorMessage x:Key="dataTemplateSelectorMessage"
+        <utility:DataTemplateSelectorMessage x:Key="dataTemplateSelectorMessage"
                                            MessageFile="{StaticResource DataTemplateMessageFile}"
                                            MessageText="{StaticResource DataTemplateMessageText}" />
     </ContentPage.Resources>

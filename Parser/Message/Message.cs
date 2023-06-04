@@ -29,12 +29,14 @@ public class Message
     }
 
     public PacketMetadata PacketMetadata { get; }
-    public List<PacketData> PacketDatas { get; }
 
-    public Message(PacketMetadata packetMetadata, List<PacketData> packetDatas)
+    // List<PacketData> if fragmented else byte[]
+    public object Data { get; }
+
+    public Message(PacketMetadata packetMetadata, object data)
     {
         PacketMetadata = packetMetadata;
-        PacketDatas = packetDatas;
+        Data = data;
     }
 }
 }

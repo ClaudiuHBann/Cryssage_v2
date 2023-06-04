@@ -6,12 +6,27 @@ namespace Parser
 {
 public class MessageManager
 {
-    public static Message.Message ToMessage(byte[] bytes, Message.Message.Type type)
+    public static Message.Message ToMessage(byte[] bytes, Message.Message.Type type, bool fragmented = false)
     {
-        return ToMessage(bytes, type, Guid.NewGuid());
+        return ToMessage(bytes, type, Guid.NewGuid(), fragmented);
     }
 
-    public static Message.Message ToMessage(byte[] bytes, Message.Message.Type type, Guid guid)
+    public static Message.Message ToMessage(byte[] bytes, Message.Message.Type type, Guid guid, bool fragmented = false)
+    {
+        if (fragmented)
+        {
+            return ToMessageFragmented(bytes, type, guid);
+        }
+        else
+        {
+            HeaderMetadata headerMetadata = new(guid, type, (uint)bytes.Length);
+            PacketMetadata packetMetadata = new(headerMetadata);
+
+            return new(packetMetadata, bytes);
+        }
+    }
+
+    static Message.Message ToMessageFragmented(byte[] bytes, Message.Message.Type type, Guid guid)
     {
         List<PacketData> packetDatas = new();
         uint packetDatasSize = 0;
@@ -39,24 +54,36 @@ public class MessageManager
             packetDatasSize += packetData.Size;
         }
 
-        HeaderMetadata headerMetadata = new(guid, type, packetDatasSize);
+        HeaderMetadata headerMetadata = new(guid, type, packetDatasSize, true);
         PacketMetadata packetMetadata = new(headerMetadata);
 
         return new(packetMetadata, packetDatas);
     }
 
-    public static MessageDisassembled FromMessage(Message.Message message)
+    static MessageDisassembled FromMessageFragmented(Message.Message message)
     {
         uint bytesSize = 0;
-        message.PacketDatas.ForEach(packetData => bytesSize += (uint)packetData.Content.Length);
+        ((List<PacketData>)message.Data).ForEach(packetData => bytesSize += (uint)packetData.Content.Length);
         byte[] bytes = new byte[bytesSize];
 
-        foreach (var packetData in message.PacketDatas)
+        foreach (var packetData in (List<PacketData>)message.Data)
         {
             packetData.Content.CopyTo(bytes, packetData.Header.Index * PacketData.CONTENT_SIZE_MAX);
         }
 
         return new(message.PacketMetadata.Header.GUID, message.PacketMetadata.Header.Type, bytes);
+    }
+
+    public static MessageDisassembled FromMessage(Message.Message message, bool fragmented = false)
+    {
+        if (fragmented)
+        {
+            return FromMessageFragmented(message);
+        }
+        else
+        {
+            return new(message.PacketMetadata.Header.GUID, message.PacketMetadata.Header.Type, (byte[])message.Data);
+        }
     }
 }
 }

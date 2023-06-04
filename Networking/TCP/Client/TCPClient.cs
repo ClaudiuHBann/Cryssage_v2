@@ -66,7 +66,8 @@ namespace Networking.TCP.Client
         metadataAsBytes.CopyTo(bytes, 0);
         dataAsBytes.CopyTo(bytes, metadataAsBytes.Length);
 
-        var message = MessageConverter.BytesToMessage(bytes);
+        var packetMetadata = MessageConverter.BytesToPacketMetadata(bytes);
+        var message = MessageConverter.BytesToMessage(bytes, packetMetadata.Header.Fragmented);
         return MessageManager.FromMessage(message);
     }
 

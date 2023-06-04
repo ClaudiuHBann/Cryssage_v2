@@ -10,16 +10,38 @@ class MessageTests : ITests
     public override bool Test()
     {
         Modules.Enqueue(TestMessageManager);
+        Modules.Enqueue(TestMessageManagerFragmented);
         Modules.Enqueue(TestMessageConverter);
+        Modules.Enqueue(TestMessageConverterFragmented);
 
         return TestModules();
     }
 
     static bool TestMessageConverter()
     {
+        byte[] dataStart = new byte[1_000_000];
+        for (int i = 0; i < dataStart.Length; i++)
+        {
+            dataStart[i] = (byte)i;
+        }
+
+        var messageStart = MessageManager.ToMessage(dataStart, Message.Type.PING);
+        var messageBytes = MessageConverter.MessageToBytes(messageStart);
+        var messageEnd = MessageConverter.BytesToMessage(messageBytes, false);
+
+        if (PrintModuleTest(messageStart != messageEnd, "MessageConverter"))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    static bool TestMessageConverterFragmented()
+    {
         var guid = Guid.NewGuid();
 
-        HeaderMetadata headerMetadataStart = new(guid, Message.Type.PING, 69);
+        HeaderMetadata headerMetadataStart = new(guid, Message.Type.PING, 69, true);
         var headerMetadataAsBytes = MessageConverter.HeaderMetadataToBytes(headerMetadataStart);
         var headerMetadataEnd = MessageConverter.BytesToHeaderMetadata(headerMetadataAsBytes);
         if (PrintModuleTest(headerMetadataStart == headerMetadataEnd, "HeaderMetadata"))
@@ -82,6 +104,31 @@ class MessageTests : ITests
 
         var message = MessageManager.ToMessage(dataStart, Message.Type.TEXT, gu1d);
         var messageDisassembled = MessageManager.FromMessage(message);
+
+        if (PrintModuleTest(message.PacketMetadata.Header.GUID == messageDisassembled.GUID &&
+                                message.PacketMetadata.Header.Type == messageDisassembled.Type &&
+                                messageDisassembled.Stream != null &&
+                                dataStart.SequenceEqual(messageDisassembled.Stream),
+                            "MessageManager"))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    static bool TestMessageManagerFragmented()
+    {
+        var gu1d = Guid.NewGuid();
+
+        byte[] dataStart = new byte[1_000_000];
+        for (int i = 0; i < dataStart.Length; i++)
+        {
+            dataStart[i] = (byte)i;
+        }
+
+        var message = MessageManager.ToMessage(dataStart, Message.Type.TEXT, gu1d, true);
+        var messageDisassembled = MessageManager.FromMessage(message, true);
 
         if (PrintModuleTest(message.PacketMetadata.Header.GUID == messageDisassembled.GUID &&
                                 message.PacketMetadata.Header.Type == messageDisassembled.Type &&

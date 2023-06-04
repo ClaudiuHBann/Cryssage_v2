@@ -10,25 +10,43 @@ public class MessageConverter
     public static byte[] MessageToBytes(Message message)
     {
         var bytesPacketMetadata = PacketMetadataToBytes(message.PacketMetadata);
-        var bytesPacketDatas = PacketDatasToBytes(message.PacketDatas);
 
-        byte[] bytes = new byte[bytesPacketMetadata.Length + bytesPacketDatas.Length];
-        bytesPacketMetadata.CopyTo(bytes, 0);
-        bytesPacketDatas.CopyTo(bytes, bytesPacketMetadata.Length);
+        if (message.PacketMetadata.Header.Fragmented)
+        {
+            var bytesPacketDatas = PacketDatasToBytes((List<PacketData>)message.Data);
 
-        return bytes;
+            byte[] bytes = new byte[bytesPacketMetadata.Length + bytesPacketDatas.Length];
+            bytesPacketMetadata.CopyTo(bytes, 0);
+            bytesPacketDatas.CopyTo(bytes, bytesPacketMetadata.Length);
+
+            return bytes;
+        }
+        else
+        {
+            byte[] bytes = new byte[bytesPacketMetadata.Length + ((byte[])message.Data).Length];
+            bytesPacketMetadata.CopyTo(bytes, 0);
+            ((byte[])message.Data).CopyTo(bytes, bytesPacketMetadata.Length);
+
+            return bytes;
+        }
     }
 
-    public static Message BytesToMessage(byte[] bytes)
+    public static Message BytesToMessage(byte[] bytes, bool fragmented)
     {
         var packetMetadataAsBytesRange = 0..(int)HeaderMetadata.SIZE;
         var packetMetadataAsBytes = bytes[packetMetadataAsBytesRange];
         var packetMetadata = BytesToPacketMetadata(packetMetadataAsBytes);
 
         var packetDatasAsBytes = bytes[(int)HeaderMetadata.SIZE..];
-        var packetDatas = BytesToPacketDatas(packetDatasAsBytes);
-
-        return new(packetMetadata, packetDatas);
+        if (fragmented)
+        {
+            var packetDatas = BytesToPacketDatas(packetDatasAsBytes);
+            return new(packetMetadata, packetDatas);
+        }
+        else
+        {
+            return new(packetMetadata, packetDatasAsBytes);
+        }
     }
 
     public static byte[] PacketMetadataToBytes(PacketMetadata packetMetadata)
@@ -125,7 +143,7 @@ public class MessageConverter
         var sizeAsBytes = bytes[sizeAsBytesRange];
         var size = BitConverter.ToUInt32(sizeAsBytes);
 
-        return new HeaderMetadata(guid, type, size);
+        return new HeaderMetadata(guid, type, size, true);
     }
 
     public static byte[] HeaderDataToBytes(HeaderData headerData)

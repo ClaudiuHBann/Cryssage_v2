@@ -66,9 +66,9 @@ namespace Networking.TCP.Client
         metadataAsBytes.CopyTo(bytes, 0);
         dataAsBytes.CopyTo(bytes, metadataAsBytes.Length);
 
-        var packetMetadata = MessageConverter.BytesToPacketMetadata(bytes);
+        var packetMetadata = MessageConverter.BytesToPacketMetadata(metadataAsBytes);
         var message = MessageConverter.BytesToMessage(bytes, packetMetadata.Header.Fragmented);
-        return MessageManager.FromMessage(message);
+        return MessageManager.FromMessage(message, packetMetadata.Header.Fragmented);
     }
 
     static void ReceiveCallback(Callback callback, CallbackProgress? callbackProgress, ContextProgress contextProgress,

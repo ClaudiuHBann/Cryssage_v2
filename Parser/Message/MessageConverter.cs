@@ -124,6 +124,7 @@ public class MessageConverter
         headerMetadata.GUID.ToByteArray().CopyTo(headerAsBytes, 0);
         headerAsBytes[Utility.GUID_SIZE] = (byte)headerMetadata.Type;
         BitConverter.GetBytes(headerMetadata.Size).CopyTo(headerAsBytes, Utility.GUID_SIZE + sizeof(Message.Type));
+        headerAsBytes[HeaderMetadata.SIZE - 1] = headerMetadata.Fragmented ? (byte)1 : (byte)0;
 
         return headerAsBytes;
     }
@@ -143,7 +144,7 @@ public class MessageConverter
         var sizeAsBytes = bytes[sizeAsBytesRange];
         var size = BitConverter.ToUInt32(sizeAsBytes);
 
-        return new HeaderMetadata(guid, type, size, true);
+        return new HeaderMetadata(guid, type, size, bytes[(int)HeaderMetadata.SIZE - 1] == 1);
     }
 
     public static byte[] HeaderDataToBytes(HeaderData headerData)

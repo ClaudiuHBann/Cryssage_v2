@@ -35,7 +35,7 @@ public class UDPBroadcastServerRaw
 
                     // we got a broadcast message and a valid remote end point and it's not us
                     if (metadata.Type == Message.Type.PING && endPointRemoteIP != null &&
-                        BroadcastIPFinder.GetLocalIPV4().ToString() != endPointRemoteIP.Address.ToString())
+                        BroadcastIPFinder.GetLocalIPV4().ToString() != endPointRemoteIP.Address.MapToIPv4().ToString())
                     {
                         callback(endPointRemoteIP);
                         server.SendOrBroadcastToAll(args.Stream, endPointRemoteIP);

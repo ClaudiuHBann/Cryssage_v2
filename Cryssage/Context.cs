@@ -1,5 +1,7 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 
+using System.Net;
 using Networking;
 using Networking.Manager;
 
@@ -22,15 +24,62 @@ public class Context : IContextHandler
 
     public EventsGUI EventsGUI { get; } = new();
 
+    readonly ConcurrentDictionary<string, bool> clientIpToOnlineStates = new();
+    readonly Thread threadBroadcast;
+    int threadBroadcastRunning = 1;
+
     public Context(UserModelView uv)
     {
         managerNetwork = new(this, new());
         viewUser = uv;
 
+        threadBroadcast = new Thread(ThreadBroadcast);
+        threadBroadcast.Start();
+
 #if DEBUG
-        var userNew = new UserModel("127.0.0.1", "dotnet_bot.png", "Pulea");
+        var userNew = new UserModel(IPAddress.Loopback.ToString(), "dotnet_bot.png", "Pulea");
         viewUser.Items.Add(userNew);
 #endif
+    }
+
+    public void Destructor()
+    {
+        Interlocked.Decrement(ref threadBroadcastRunning);
+        threadBroadcast.Join();
+    }
+
+    void ThreadBroadcast()
+    {
+        while (threadBroadcastRunning == 1)
+        {
+            // sleep in 100ms steps and check if the thread is still running between sleeps
+            for (int i = 0; i < Utility.DELAY_BROADCAST_PROCESS_START; i += 100)
+            {
+                Thread.Sleep(100);
+                if (threadBroadcastRunning == 0)
+                {
+                    return;
+                }
+            }
+
+            Broadcast();
+
+            // sleep in 100ms steps and check if the thread is still running between sleeps
+            for (int i = 0; i < Utility.DELAY_BROADCAST_PROCESS_STEP; i += 100)
+            {
+                Thread.Sleep(100);
+                if (threadBroadcastRunning == 0)
+                {
+                    return;
+                }
+            }
+
+            foreach (var (key, _) in clientIpToOnlineStates)
+            {
+                viewUser.Items.First(user => user.Ip == key).Online = clientIpToOnlineStates[key];
+                clientIpToOnlineStates[key] = false;
+            }
+        }
     }
 
     public void Send(string ip, IContext context) => managerNetwork.Send(ip, context);
@@ -47,12 +96,18 @@ public class Context : IContextHandler
 
         if (viewUser.Items.Any(user => user.Ip == context.IP))
         {
-            viewUser.Items.First(user => user.Ip == context.IP).Name = context.Name;
+            var user = viewUser.Items.First(user => user.Ip == context.IP);
+            user.Name = context.Name;
+            user.Online = true;
+
+            clientIpToOnlineStates[context.IP] = true;
         }
         else
         {
-            var userNew = new UserModel(context.IP, "dotnet_bot.png", context.Name);
+            var userNew = new UserModel(context.IP, "dotnet_bot.png", context.Name) { Online = true };
             viewUser.Items.Add(userNew);
+
+            clientIpToOnlineStates[context.IP] = true;
         }
     }
 
@@ -106,7 +161,7 @@ public class Context : IContextHandler
         return index == -1 ? null : viewUser.Items[index];
     }
 
-    public UserModel GetUserByIP(string ip) => viewUser.Items.Where(user => user.Ip == ip).First();
+    public UserModel GetUserByIP(string ip) => viewUser.Items.First(user => user.Ip == ip);
 
     public void AddUserSelectedMessage(MessageModel messageModel)
     {

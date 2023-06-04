@@ -20,8 +20,11 @@ class Program
 /*
     TODO:
         MUST:
-            - add icon for peer to see if it is online or offline
             - save and load context
+            - notifications (not necessary)
+            - run in background on close and add to tray icon (not necessary)
+            - queue of messages for offline  (not necessary)
+            - send bye when exiting app (not necessary)
             - cancel download or send (not necessary)
             - add the ability to block peers (not necessary)
             - split page in multiple views (not necessary)

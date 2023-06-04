@@ -9,25 +9,18 @@ namespace Networking.UDP.Client
 {
 using Callback = Action<IPEndPoint>;
 
-// Broadcasts every 5 seconds continously and
-// listens for any ip with the udp server broadcast port and receives from any ip and port
+// Listens for any ip with the udp server broadcast port and receives from any ip and port
 public class UDPBroadcastClient
 {
     readonly UDPBroadcastClientRaw client;
-    Timer? timer = null;
-    readonly ushort milliseconds;
 
-    public UDPBroadcastClient(ushort port, byte seconds)
+    public UDPBroadcastClient(ushort port)
     {
         client = new(port);
-        milliseconds = (ushort)(seconds * 1000);
     }
 
     public void Start(Callback callback)
     {
-        timer = new Timer(
-            _ => Broadcast(), null, 0, milliseconds);
-
         Receive(callback);
     }
 
@@ -46,7 +39,7 @@ public class UDPBroadcastClient
 
                     // we got a broadcast message and a valid remote end point and it's not us
                     if (metadata.Type == Message.Type.PING && endPointRemoteIP != null &&
-                        BroadcastIPFinder.GetLocalIPV4().ToString() != endPointRemoteIP.Address.ToString())
+                        BroadcastIPFinder.GetLocalIPV4().ToString() != endPointRemoteIP.Address.MapToIPv4().ToString())
                     {
                         callback(endPointRemoteIP);
                     }

@@ -14,23 +14,25 @@ public partial class MainPage : ContentPage
     [LibraryImport("User32.dll")]
     private static partial short GetAsyncKeyState(int vKey);
 
-    readonly Context context;
+    public Context Context;
 
     public MainPage(UserModelView uv)
     {
         InitializeComponent();
 
-        context = new(uv);
+        Context = new(uv);
         collectionViewUsers.ItemsSource = uv.Items;
 
         InitializeEventsGUI(uv);
     }
 
+    public void Destructor() => Context.Destructor();
+
     void InitializeEventsGUI(UserModelView uv)
     {
-        context.EventsGUI.OnProgressSend += contextProgress =>
+        Context.EventsGUI.OnProgressSend += contextProgress =>
         {
-            var user = uv.Items.Where(user => user.Ip == contextProgress.IP).First();
+            var user = uv.Items.First(user => user.Ip == contextProgress.IP);
             var messages = user.MessageView.Items.Where(messageFile => messageFile.Guid == contextProgress.GUID);
             if (!messages.Any())
             {
@@ -48,9 +50,9 @@ public partial class MainPage : ContentPage
             messageFileModel.ProgressStart = contextProgress.Done ? false : contextProgress.Percentage > 0;
         };
 
-        context.EventsGUI.OnProgressReceive += contextProgress =>
+        Context.EventsGUI.OnProgressReceive += contextProgress =>
         {
-            var user = uv.Items.Where(user => user.Ip == contextProgress.IP).First();
+            var user = uv.Items.First(user => user.Ip == contextProgress.IP);
             var messages = user.MessageView.Items.Where(messageFile => messageFile.Guid == contextProgress.GUID);
             if (!messages.Any())
             {
@@ -71,20 +73,20 @@ public partial class MainPage : ContentPage
 
     void OnSelectionChangedCollectionViewUsers(object sender, SelectionChangedEventArgs e)
     {
-        context.UserSelected = (UserModel)collectionViewUsers.SelectedItem;
+        Context.UserSelected = (UserModel)collectionViewUsers.SelectedItem;
 
         UpdateChatBackgroundMessage();
 
-        collectionViewMessages.ItemsSource = context.GetUserSelectedItemsMessage();
+        collectionViewMessages.ItemsSource = Context.GetUserSelectedItemsMessage();
 
-        var files = context.GetUserSelectedItemsFile();
+        var files = Context.GetUserSelectedItemsFile();
         collectionViewFiles.ItemsSource = files;
         collectionViewFiles.IsVisible = files.Count > 0;
     }
 
     void OnClickButtonSendRecord(object sender, EventArgs e)
     {
-        if (!context.IsAnyUserSelected())
+        if (!Context.IsAnyUserSelected())
         {
             return;
         }
@@ -97,28 +99,26 @@ public partial class MainPage : ContentPage
     {
         buttonSendRecordIcon.Glyph = editor.Text.Length > 0 ? FontIcons.Airplane : FontIcons.Microphone;
 
-        const int VK_RETURN = 0x0D;
-        var VK_RETURN_STATE = GetAsyncKeyState(VK_RETURN);
-        if ((VK_RETURN_STATE & 1) != 1)
-        {
-            return;
-        }
-
         const int VK_LSHIFT = 0xA0;
         var VK_LSHIFT_STATE = GetAsyncKeyState(VK_LSHIFT);
         const int VK_RSHIFT = 0xA1;
         var VK_RSHIFT_STATE = GetAsyncKeyState(VK_RSHIFT);
-        if ((VK_LSHIFT_STATE & 1) == 1 || (VK_RSHIFT_STATE & 1) == 1)
+        if (VK_LSHIFT_STATE < 0 || VK_RSHIFT_STATE < 0)
         {
             return;
         }
 
-        OnClickButtonSendRecord(sender, e);
+        const int VK_RETURN = 0x0D;
+        var VK_RETURN_STATE = GetAsyncKeyState(VK_RETURN);
+        if (VK_RETURN_STATE < 0)
+        {
+            OnClickButtonSendRecord(sender, e);
+        }
     }
 
     async void OnClickedImageButtonAttach(object sender, EventArgs e)
     {
-        if (!context.IsAnyUserSelected())
+        if (!Context.IsAnyUserSelected())
         {
             return;
         }
@@ -145,22 +145,22 @@ public partial class MainPage : ContentPage
         }
         var pathFile = pathFolder + "\\" + Path.GetFileName(messageFile.FilePath);
 
-        context.Send(context.GetUserSelected().Ip,
+        Context.Send(Context.GetUserSelected().Ip,
                      new ContextFileRequest(pathFile, messageFile.Size, messageFile.Guid));
     }
 
     void OnClickedButtonFileRemove(object sender, EventArgs e)
     {
         var messageFileModel = (MessageFileModel)((Button)sender).BindingContext;
-        context.GetUserSelectedItemsFile().Remove(messageFileModel);
-        collectionViewFiles.IsVisible = context.GetUserSelectedItemsFile().Count > 0;
+        Context.GetUserSelectedItemsFile().Remove(messageFileModel);
+        collectionViewFiles.IsVisible = Context.GetUserSelectedItemsFile().Count > 0;
         buttonSendRecordIcon.Glyph =
-            context.GetUserSelectedItemsFile().Count > 0 ? FontIcons.Airplane : FontIcons.Microphone;
+            Context.GetUserSelectedItemsFile().Count > 0 ? FontIcons.Airplane : FontIcons.Microphone;
     }
 
     void EditorSend()
     {
-        if (!context.IsAnyUserSelected())
+        if (!Context.IsAnyUserSelected())
         {
             return;
         }
@@ -175,23 +175,23 @@ public partial class MainPage : ContentPage
                 var messageText = new MessageTextModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN,
                                                        true, contextText.Text, contextText.GUID);
 
-                context.AddUserSelectedMessage(messageText);
-                context.Send(context.GetUserSelected().Ip, contextText);
+                Context.AddUserSelectedMessage(messageText);
+                Context.Send(Context.GetUserSelected().Ip, contextText);
             }
         }
 
-        foreach (var file in context.GetUserSelectedItemsFile())
+        foreach (var file in Context.GetUserSelectedItemsFile())
         {
             var messageFile = new MessageFileModel(Environment.MachineName, DateTime.UtcNow, MessageState.SEEN, true,
                                                    "dotnet_bot.png", file.FilePath, file.Size);
 
-            context.AddUserSelectedMessage(messageFile);
-            context.Send(context.GetUserSelected().Ip,
+            Context.AddUserSelectedMessage(messageFile);
+            Context.Send(Context.GetUserSelected().Ip,
                          new ContextFileInfo(file.FilePath, file.Size, DateTime.UtcNow, messageFile.Guid));
         }
 
         UpdateChatBackgroundMessage();
-        collectionViewMessages.ScrollTo(context.GetUserSelectedItemsMessage().Count - 1);
+        collectionViewMessages.ScrollTo(Context.GetUserSelectedItemsMessage().Count - 1);
     }
 
     void EditorReset()
@@ -199,13 +199,13 @@ public partial class MainPage : ContentPage
         editor.Text = "";
         buttonSendRecordIcon.Glyph = FontIcons.Microphone;
 
-        context.GetUserSelectedItemsFile().Clear();
+        Context.GetUserSelectedItemsFile().Clear();
         collectionViewFiles.IsVisible = false;
     }
 
     void AddUserSelectedFile(MessageFileModel messageFileModel)
     {
-        var files = context.GetUserSelectedItemsFile();
+        var files = Context.GetUserSelectedItemsFile();
         if (files == null)
         {
             return;
@@ -218,17 +218,17 @@ public partial class MainPage : ContentPage
 
     void UpdateChatBackgroundMessage()
     {
-        if (context.GetUserSelectedItemsMessage().Count > 0)
+        if (Context.GetUserSelectedItemsMessage().Count > 0)
         {
             labelMessages.Text = "";
         }
         else
         {
-            labelMessages.Text = string.Format(Strings.MessageUserSelectedMessagesNone, context.GetUserSelected().Name);
+            labelMessages.Text = string.Format(Strings.MessageUserSelectedMessagesNone, Context.GetUserSelected().Name);
         }
     }
 
-    void OnClickedMenuFlyoutItemPeersSearch(object sender, EventArgs e) => context.Broadcast();
+    void OnClickedMenuFlyoutItemPeersSearch(object sender, EventArgs e) => Context.Broadcast();
 
     async void OnClickedMenuFlyoutItemPeersClear(object sender, EventArgs e)
     {
@@ -236,7 +236,7 @@ public partial class MainPage : ContentPage
                                         Strings.MessageYes, Strings.MessageNo);
         if (clear)
         {
-            context.Clear();
+            Context.Clear();
         }
     }
 

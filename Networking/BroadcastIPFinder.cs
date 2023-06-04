@@ -1,6 +1,6 @@
-﻿using System.Net.NetworkInformation;
+﻿using System.Net;
 using System.Net.Sockets;
-using System.Net;
+using System.Net.NetworkInformation;
 
 namespace Networking
 {
@@ -12,9 +12,8 @@ public class BroadcastIPFinder
         var addressUnicast =
             NetworkInterface.GetAllNetworkInterfaces()
                 .SelectMany(property => property.GetIPProperties().UnicastAddresses)
-                .Where(addressUnicast => addressUnicast.Address.AddressFamily == AddressFamily.InterNetwork &&
-                                         localIPV4.ToString() == addressUnicast.Address.ToString())
-                .First();
+                .First(addressUnicast => addressUnicast.Address.AddressFamily == AddressFamily.InterNetwork &&
+                                         localIPV4.ToString() == addressUnicast.Address.MapToIPv4().ToString());
 
         return GetBroadcastAddress(addressUnicast).ToString();
     }
@@ -22,8 +21,7 @@ public class BroadcastIPFinder
     public static IPAddress GetLocalIPV4()
     {
         return Dns.GetHostEntry(Dns.GetHostName())
-            .AddressList.Where(addr => addr.AddressFamily == AddressFamily.InterNetwork)
-            .First();
+            .AddressList.First(addr => addr.AddressFamily == AddressFamily.InterNetwork);
     }
 
     static IPAddress GetBroadcastAddress(UnicastIPAddressInformation unicastAddress) =>

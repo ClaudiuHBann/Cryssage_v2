@@ -3,6 +3,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using System.Net;
 using Networking.Context.File;
 using Networking.Context.Request;
 using Networking.Context.Discover;
@@ -15,7 +16,7 @@ public abstract class IContext
 {
     [JsonIgnore]
     // this is set when a context is received in the server processor
-    public string IP { get; set; } = "127.0.0.1";
+    public string IP { get; set; } = IPAddress.Loopback.ToString();
 
     // the type of the context is the same as the message type
     public Message.Type Type { get; set; } = Message.Type.UNKNOWN;

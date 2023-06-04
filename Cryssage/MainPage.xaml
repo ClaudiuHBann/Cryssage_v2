@@ -16,6 +16,8 @@
         <convertersCUIM:LayoutOption x:Key="converterMineToLayoutOption" />
         <convertersCUIM:BackgroundColor x:Key="converterMineToBackgroundColor" />
         <convertersCUIM:Margin x:Key="converterMineToMargin" />
+        <convertersCUIM:OnlineStroke x:Key="converterOnlineStroke" />
+        <convertersCUIM:OnlineFill x:Key="converterOnlineFill" />
 
         <convertersCDM:Time x:Key="converterTimestampToTime" />
         <convertersCDM:Size x:Key="converterSizeAsString" />
@@ -188,15 +190,25 @@
                 <Label Grid.Column="2"
                        VerticalOptions="Center"
                        HorizontalTextAlignment="End"
-                       Margin="0,0,5,0"
+                       Margin="0,0,10,0"
                        Text="{Binding MessageView, Converter={StaticResource converterUserLastMessageToTime}}" />
 
                 <Label Grid.Column="1"
                        Grid.Row="1"
                        Grid.ColumnSpan="2"
                        VerticalOptions="Center"
-                       Margin="5,0,0,0"
+                       Margin="10,0,0,0"
                        Text="{Binding MessageView, Converter={StaticResource converterUserLastMessageToText}}" />
+
+                <Ellipse Grid.Row="1"
+                         Grid.Column="2"
+                         Margin="0,0,15,5"
+                         Fill="{Binding Online, Converter={StaticResource converterOnlineFill}}"
+                         Stroke="{Binding Online, Converter={StaticResource converterOnlineStroke}}"
+                         StrokeThickness="2"
+                         WidthRequest="20"
+                         HeightRequest="20"
+                         HorizontalOptions="End" />
 
                 <BoxView Color="#0b141a"
                          Grid.Row="1"

@@ -99,7 +99,12 @@ public class Context : IContextHandler
 
             foreach (var (key, _) in clientIpToOnlineStates)
             {
-                viewUser.Items.First(user => user.Ip == key).Online = clientIpToOnlineStates[key];
+                var user = viewUser.Items.Where(user => user.Ip == key);
+                if (user.Any())
+                {
+                    user.First().Online = clientIpToOnlineStates[key];
+                }
+
                 clientIpToOnlineStates[key] = false;
             }
         }
@@ -109,7 +114,7 @@ public class Context : IContextHandler
 
     public void Broadcast() => managerNetwork.Broadcast();
 
-    public void SetName(string name) => contextHost.Name = name;
+    public void SetName(string name) => Name = contextHost.Name = name;
 
     public void SetDDD(string ddd) => contextHost.DefaultDownloadDirectory = ddd;
 

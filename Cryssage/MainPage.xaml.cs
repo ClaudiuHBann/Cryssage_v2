@@ -127,8 +127,8 @@ public partial class MainPage : ContentPage
         foreach (var file in files)
         {
             var fileSize = (uint) new FileInfo(file.FullPath).Length;
-            var message = new MessageFileModel(Environment.MachineName, DateTime.UtcNow, true, "dotnet_bot.png",
-                                               file.FullPath, fileSize, Guid.NewGuid());
+            var message = new MessageFileModel(Context.Name, DateTime.UtcNow, true, "dotnet_bot.png", file.FullPath,
+                                               fileSize, Guid.NewGuid());
 
             AddUserSelectedFile(message);
         }
@@ -167,8 +167,8 @@ public partial class MainPage : ContentPage
             {
                 Console.WriteLine(editorTextTrimmed);
                 var contextText = new ContextText(editorTextTrimmed);
-                var messageText = new MessageTextModel(Environment.MachineName, DateTime.UtcNow, true, contextText.Text,
-                                                       contextText.GUID);
+                var messageText =
+                    new MessageTextModel(Context.Name, DateTime.UtcNow, true, contextText.Text, contextText.GUID);
 
                 Context.AddUserSelectedMessage(messageText);
                 Context.Send(Context.GetUserSelected().Ip, contextText);
@@ -177,8 +177,8 @@ public partial class MainPage : ContentPage
 
         foreach (var file in Context.GetUserSelectedItemsFile())
         {
-            var messageFile = new MessageFileModel(Environment.MachineName, DateTime.UtcNow, true, "dotnet_bot.png",
-                                                   file.FilePath, file.Size);
+            var messageFile =
+                new MessageFileModel(Context.Name, DateTime.UtcNow, true, "dotnet_bot.png", file.FilePath, file.Size);
 
             Context.AddUserSelectedMessage(messageFile);
             Context.Send(Context.GetUserSelected().Ip,

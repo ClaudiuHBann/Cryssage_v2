@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
+using Newtonsoft.Json;
+
 using Cryssage.Views;
 
 namespace Cryssage.Models
@@ -16,6 +18,7 @@ public partial class UserModel : ObservableObject
     string name;
 
     [ObservableProperty]
+    [property:JsonIgnore]
     bool online;
 
     [ObservableProperty]

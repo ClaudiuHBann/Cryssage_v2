@@ -159,17 +159,6 @@ public class Context : IContextHandler
         viewUser = contextJSONAsJObject.HasValues
                        ? contextJSONAsJObject[nameof(viewUser)].ToObject<UserModelView>(JsonSerializer.Create(settings))
                        : new();
-        foreach (var user in viewUser.Items)
-        {
-            user.Online = false;
-            foreach (var message in user.MessageView.Items)
-            {
-                if (message.Type == MessageType.FILE)
-                {
-                    ((MessageFileModel)message).ProgressStart = false;
-                }
-            }
-        }
 
         // return all the users file messages that are mine
         return viewUser.Items.SelectMany(user => user.MessageView.Items)

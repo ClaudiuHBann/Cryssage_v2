@@ -213,7 +213,7 @@ public partial class MainPage : ContentPage
 
     void UpdateChatBackgroundMessage()
     {
-        if (Context.GetUserSelectedItemsMessage().Count > 0)
+        if (Context.GetUserSelectedItemsMessage()?.Count > 0)
         {
             labelMessages.Text = "";
         }

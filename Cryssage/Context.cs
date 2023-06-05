@@ -147,14 +147,18 @@ public class Context : IContextHandler
         // get json to object
         var contextJSONAsBytes = File.ReadAllBytes(filePathContextFile);
         var contextJSONAsString = Networking.Utility.ENCODING_DEFAULT.GetString(contextJSONAsBytes);
-        JsonSerializerSettings settings = new() { TypeNameHandling = TypeNameHandling.Auto };
+        JsonSerializerSettings settings =
+            new() { TypeNameHandling = TypeNameHandling.Auto, Converters = { new JsonConverterEx() } };
         var contextJSONAsJObject = JsonConvert.DeserializeObject<JObject>(contextJSONAsString, settings);
 
         // initialize objects and reset essential data
         contextHost =
-            contextJSONAsJObject.HasValues ? contextJSONAsJObject[nameof(contextHost)].ToObject<ContextHost>() : new();
-        viewUser =
-            contextJSONAsJObject.HasValues ? contextJSONAsJObject[nameof(viewUser)].ToObject<UserModelView>() : new();
+            contextJSONAsJObject.HasValues
+                ? contextJSONAsJObject[nameof(contextHost)].ToObject<ContextHost>(JsonSerializer.Create(settings))
+                : new();
+        viewUser = contextJSONAsJObject.HasValues
+                       ? contextJSONAsJObject[nameof(viewUser)].ToObject<UserModelView>(JsonSerializer.Create(settings))
+                       : new();
         foreach (var user in viewUser.Items)
         {
             user.Online = false;

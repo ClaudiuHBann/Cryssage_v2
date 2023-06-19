@@ -6,23 +6,25 @@ namespace Networking
 {
 public class BroadcastIPFinder
 {
-    public static string GetBroadcastIP()
+    public static List<IPAddress> GetBroadcastIPs()
     {
-        var localIPV4 = GetLocalIPV4();
-        var addressUnicast =
+        var broadcastIPs =
             NetworkInterface.GetAllNetworkInterfaces()
                 .SelectMany(property => property.GetIPProperties().UnicastAddresses)
-                .First(addressUnicast => addressUnicast.Address.AddressFamily == AddressFamily.InterNetwork &&
-                                         localIPV4.ToString() == addressUnicast.Address.MapToIPv4().ToString());
+                .Where(addressUnicast => addressUnicast.Address.AddressFamily == AddressFamily.InterNetwork)
+                .Select(GetBroadcastAddress)
+                .ToList();
+        broadcastIPs.Add(IPAddress.Broadcast);
 
-        return GetBroadcastAddress(addressUnicast).ToString();
+        return broadcastIPs;
     }
 
-    public static IPAddress GetLocalIPV4()
-    {
-        return Dns.GetHostEntry(Dns.GetHostName())
-            .AddressList.First(addr => addr.AddressFamily == AddressFamily.InterNetwork);
-    }
+    public static List<IPAddress> GetLocalIPs() =>
+        NetworkInterface.GetAllNetworkInterfaces()
+            .SelectMany(property => property.GetIPProperties().UnicastAddresses)
+            .Where(addressUnicast => addressUnicast.Address.AddressFamily == AddressFamily.InterNetwork)
+            .Select(addressUnicast => addressUnicast.Address)
+            .ToList();
 
     static IPAddress GetBroadcastAddress(UnicastIPAddressInformation unicastAddress) =>
         GetBroadcastAddress(unicastAddress.Address, unicastAddress.IPv4Mask);

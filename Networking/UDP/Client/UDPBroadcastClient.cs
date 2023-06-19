@@ -13,6 +13,8 @@ using Callback = Action<IPEndPoint>;
 public class UDPBroadcastClient
 {
     readonly UDPBroadcastClientRaw client;
+    readonly List<IPAddress> broadcastIPs = BroadcastIPFinder.GetBroadcastIPs();
+    readonly List<IPAddress> localIPs = BroadcastIPFinder.GetLocalIPs();
 
     public UDPBroadcastClient(ushort port)
     {
@@ -39,7 +41,7 @@ public class UDPBroadcastClient
 
                     // we got a broadcast message and a valid remote end point and it's not us
                     if (metadata.Type == Message.Type.PING && endPointRemoteIP != null &&
-                        BroadcastIPFinder.GetLocalIPV4().ToString() != endPointRemoteIP.Address.MapToIPv4().ToString())
+                        !localIPs.Any(localIP => localIP.ToString() == endPointRemoteIP.Address.MapToIPv4().ToString()))
                     {
                         callback(endPointRemoteIP);
                     }
@@ -54,8 +56,10 @@ public class UDPBroadcastClient
         var message = MessageManager.ToMessage(Array.Empty<byte>(), Message.Type.PING);
         var messageBytes = MessageConverter.MessageToBytes(message);
 
-        client.SendOrBroadcastToAll(messageBytes, new IPEndPoint(IPAddress.Parse(BroadcastIPFinder.GetBroadcastIP()),
-                                                                 Utility.PORT_UDP_BROADCAST_SERVER));
+        foreach (var broadcastIP in broadcastIPs)
+        {
+            client.SendOrBroadcastToAll(messageBytes, new IPEndPoint(broadcastIP, Utility.PORT_UDP_BROADCAST_SERVER));
+        }
     }
 }
 }

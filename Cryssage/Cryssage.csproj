@@ -41,6 +41,10 @@
 		<AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
 		<GenerateTestArtifacts>True</GenerateTestArtifacts>
 		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
+		<Title>Cryssage</Title>
+		<Company>HBann</Company>
+		<Authors>Claudiu HBann</Authors>
+		<Description>P2P subnetwork chat.</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

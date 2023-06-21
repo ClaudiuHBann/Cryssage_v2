@@ -28,6 +28,7 @@ public class ClientProcessor
                             return;
                         }
 
+                        contextProgress.IP = contextReponse.IP;
                         if (contextReponse.HasProgress)
                         {
                             Dispatcher.Dispatch(contextProgress);
@@ -45,6 +46,7 @@ public class ClientProcessor
                     },
                     contextProgress =>
                     {
+                        contextProgress.IP = contextReponse.IP;
                         if (contextReponse.HasProgress)
                         {
                             Dispatcher.Dispatch(contextProgress);
@@ -65,6 +67,7 @@ public class ClientProcessor
                             return;
                         }
 
+                        contextProgress.IP = contextReponse.IP;
                         if (contextReponse.HasProgress)
                         {
                             Dispatcher.DispatchResponse(contextProgress);
@@ -83,6 +86,7 @@ public class ClientProcessor
                     },
                     contextProgress =>
                     {
+                        contextProgress.IP = contextReponse.IP;
                         if (contextReponse.HasProgress)
                         {
                             Dispatcher.DispatchResponse(contextProgress);

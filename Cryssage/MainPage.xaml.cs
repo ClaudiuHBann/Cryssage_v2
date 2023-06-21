@@ -253,7 +253,15 @@ public partial class MainPage : ContentPage
         }
     }
 
-    async void OnClickedMenuFlyoutItemAbout(object sender, EventArgs e) =>
-        await DisplayAlert(Strings.MessageAboutTitle, Strings.MessageAboutDescription, Strings.MessageOK);
+    async void OnClickedMenuFlyoutItemAbout(object sender, EventArgs e)
+    {
+        var goToProject = await DisplayAlert(Strings.MessageAboutTitle, Strings.MessageAboutDescription,
+                                             Strings.MessageAboutGoToProject, Strings.MessageOK);
+        if (goToProject)
+        {
+            var uri = new Uri("https://github.com/ClaudiuHBann/Cryssage_v2");
+            await Browser.Default.OpenAsync(uri, BrowserLaunchMode.SystemPreferred);
+        }
+    }
 }
 }

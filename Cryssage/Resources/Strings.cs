@@ -15,6 +15,7 @@ public class Strings
 
     public const string MessageAboutTitle = "About";
     public const string MessageAboutDescription = "Developed by Claudiu HBann";
+    public const string MessageAboutGoToProject = "Go To Project";
 
     public const string MessagePeersClearTitle = "Clear Peers";
     public const string MessagePeersClearDescription = "Are you sure you want to clear peers?";

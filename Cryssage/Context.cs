@@ -57,7 +57,7 @@ public class Context : IContextHandler
         threadBroadcast = new Thread(ThreadBroadcast);
         threadBroadcast.Start();
 
-#if DEBUG
+#if _DEBUG
         var userNew = new UserModel(IPAddress.Loopback.ToString(), "dotnet_bot.png", "Pulea");
         viewUser.Items.Add(userNew);
 #endif
